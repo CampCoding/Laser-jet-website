@@ -26,9 +26,11 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import AddToCartButton from "../../_commponent/CartButton";
 export default function ProductDetailsPage() {
+
   const [isFav, setIsFav] = useState(false);
   const [product, setProduct] = useState(null);
   const { id } = useParams();
+  console.log(id);
 const[alltext,setalltext]=useState(false)
   async function GetSpasificdata(id) {
     const data = await SpasificProd(id);

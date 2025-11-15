@@ -32,7 +32,7 @@ export default function PanerPage() {
 
   return (
     <Container className="relative flex justify-center items-center py-10 bg-gradient-to-b from-gray-50 to-gray-100">
-      <div className="container  shadow-xl rounded-3xl overflow-hidden">
+      <div className="  shadow-xl rounded-3xl overflow-hidden">
         <Swiper
           spaceBetween={30}
           centeredSlides

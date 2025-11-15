@@ -47,13 +47,18 @@ export default function CategoriesSwiper() {
           >
             الفئات
           </h2>
-          <Button
+
+          <Link href={"/categories"}>
+            <Button
             className={
               "bg-blue-600 hover:bg-blue-700 cursor-pointer hover:scale-105 active:scale-90"
             }
           >
             عرض الكل
           </Button>
+          
+          </Link>
+        
         </div>
 
         {/* Swiper Responsive */}
