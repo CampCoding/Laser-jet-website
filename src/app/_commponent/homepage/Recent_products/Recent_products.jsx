@@ -16,6 +16,7 @@ import {
 import HomeApi from "@/CallApi/HomaApi";
 import Link from "next/link";
 import Container from "../../utils/Container";
+import AddToCart from "@/CartAction/AddToCart";
 
 export default function Recent_products() {
   const [Productdata, setData] = useState([]);
@@ -24,7 +25,7 @@ export default function Recent_products() {
 
     if (data.message === "تم جلب البيانات بنجاح") {
       setData(data?.data?.recent_products);
-      console.log(data?.data?.recent_products);
+    
     }
   }
 
@@ -92,11 +93,12 @@ export default function Recent_products() {
                     </div>
                     <p className="text-lg font-semibold text-orange-600">
                       {product.price}{" "}
-                      <span className="text-sm text-gray-600">EGP</span>
+                      <span className="text-sm text-gray-600">جنيه</span>
                     </p>
                   </CardContent>
                 </Card>
               </Link>
+             
             ))}
           </div>
         </div>

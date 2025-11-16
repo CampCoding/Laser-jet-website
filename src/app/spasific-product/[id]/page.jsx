@@ -208,7 +208,7 @@ const[alltext,setalltext]=useState(false)
         </CardContent>
 
         {/* زر أضف للسلة */}
-        <AddToCartButton/>
+     <AddToCartButton productId={product.product_id} />
       </Card>
     </div>
   );

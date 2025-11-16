@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,26 +14,24 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-} from "@/components/ui/card";
-
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import Image from "next/image";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { MyContext } from "@/providers/OtpContext";
 
-// ✅ تعريف التحقق (Validation Schema)
+// ✅ Validation Schema
 const formSchema = z
   .object({
-    fullName: z.string().min(3, "الاسم يجب أن يكون 3 أحرف على الأقل"),
+    username: z.string().min(3, "الاسم يجب أن يكون ٣ أحرف على الأقل"),
     phone: z
       .string()
       .min(11, "رقم الهاتف يجب أن يحتوي على 11 رقمًا")
       .regex(/^01[0-9]{9}$/, "رقم الهاتف يجب أن يبدأ بـ 01 ويتكون من 11 رقمًا"),
-    password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
+    password: z.string().min(6, "كلمة المرور يجب أن تكون ٦ أحرف على الأقل"),
     confirmPassword: z.string().min(6, "يرجى تأكيد كلمة المرور"),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -42,12 +40,22 @@ const formSchema = z
   });
 
 export default function RegisterPage() {
+  const { setValue } = useContext(MyContext);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  // ⛔ Redirect if already logged in
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/");
+    }
+  }, [status, router]);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "",
+      username: "",
       phone: "",
       password: "",
       confirmPassword: "",
@@ -55,37 +63,41 @@ export default function RegisterPage() {
   });
 
   const onSubmit = async (values) => {
-    console.log(values);
+    setLoading(true);
+
+    const newValues = { ...values };
+    delete newValues.confirmPassword;
+
+    const { data } = await axios.post(
+      "https://lesarjet.camp-coding.site/api/user/create",
+      newValues
+    );
+
+    setLoading(false);
+
+    if (data?.success) {
+      setValue("تم جلب بياناتك بنجاح");
+      router.push("/register/otp");
+    }
   };
 
-  // تهيئة AOS عند تحميل الكومبوننت
   useEffect(() => {
-    AOS.init({
-      duration: 800, // مدة الأنيميشن
-      once: true,    // يظهر مرة واحدة فقط
-      easing: "ease-in-out",
-    });
+    AOS.init({ duration: 800, once: true, easing: "ease-in-out" });
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col  items-center justify-center bg-gradient-to-t md:bg-gradient-to-r from-blue-600 to-gray-50 px-4">
-      
-      {/* العنوان يظهر من اليمين للشمال */}
-      <div
-        data-aos="fade-left"
-        className="flex flex-col justify-center items-center"
-      >
-      <div className=" relative w-[400px] h-[270px]">
-<Image src="/logo.png" alt="Logo" fill />
-      </div>
+    <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gradient-to-t md:bg-gradient-to-r from-blue-600 to-gray-50 px-4 md:px-16 gap-8">
+<div className="hidden md:flex relative w-1/3 h-[250px] items-center justify-center">
+        <Image
+          src="/logo.png"
+          alt="Logo"
+          fill
+          className="object-contain"
+        />
       </div>
 
-      {/* الفورم يظهر من الأسفل للأعلى */}
-      <div
-        data-aos="fade-up"
-        className="w-full max-w-2xl shadow-md border bg-white rounded-2xl mt-6 md:mt-0 md:ml-10 z-10"
-      >
-      
+      {/* الفورم على الشمال */}
+      <div className="w-full md:w-2/3 max-w-2xl shadow-md border bg-white rounded-2xl z-10">
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-gray-800">
@@ -95,19 +107,17 @@ export default function RegisterPage() {
 
           <CardContent>
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4 text-right"
-              >
-                {/* الاسم الكامل */}
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 text-right">
+
+                {/* الاسم */}
                 <FormField
                   control={form.control}
-                  name="fullName"
+                  name="username"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>الاسم الكامل</FormLabel>
                       <FormControl>
-                        <Input placeholder="" className="text-right" {...field} />
+                        <Input className="text-right" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -122,12 +132,7 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel>رقم الهاتف</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder=""
-                          type="tel"
-                          className="text-right"
-                          {...field}
-                        />
+                        <Input type="tel" className="text-right" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -142,12 +147,7 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel>كلمة المرور</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder=""
-                          type="password"
-                          className="text-right"
-                          {...field}
-                        />
+                        <Input type="password" className="text-right" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -162,12 +162,7 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel>تأكيد كلمة المرور</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder=""
-                          type="password"
-                          className="text-right"
-                          {...field}
-                        />
+                        <Input type="password" className="text-right" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -181,11 +176,16 @@ export default function RegisterPage() {
                 >
                   {loading ? "جارٍ إنشاء الحساب..." : "إنشاء الحساب"}
                 </Button>
+
               </form>
             </Form>
           </CardContent>
         </Card>
       </div>
+
+      {/* الصورة على اليمين */}
+      
+
     </div>
   );
 }

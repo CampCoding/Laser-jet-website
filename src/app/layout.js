@@ -3,7 +3,9 @@ import "./globals.css";
 import Navbar from "./_commponent/homepage/NavBar/NavBar";
 import "aos/dist/aos.css";
 import Footer from "./_commponent/homepage/Footer/Footer";
-import NextAuthProvider from "./providers/NextAuthProvider";
+import NextAuthProvider from "@/providers/NextAuthProvider";
+import { MyContextProvider } from "@/providers/OtpContext";
+
 
 export const metadata = {
   title: "Create Next App",
@@ -21,10 +23,14 @@ export default function RootLayout({ children }) {
     <html lang="ar">
       <body dir="rtl" className={`  antialiased ${notoKufiArabic.className}`}>
         <NextAuthProvider>
+<MyContextProvider>
 
  <Navbar />
         <main className="p-">{children}</main>
         <Footer />
+
+</MyContextProvider>
+
 
         </NextAuthProvider>
        

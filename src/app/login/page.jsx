@@ -6,7 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -17,13 +17,16 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
 import AOS from "aos";
 import "aos/dist/aos.css";
 
-// ✅ التحقق (Validation Schema)
+// =====================
+// ✅ Validation Schema
+// =====================
 const formSchema = z.object({
   phone: z
     .string()
@@ -32,10 +35,16 @@ const formSchema = z.object({
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
 });
 
+// =====================
+// 🚀 Login Page
+// =====================
 export default function LoginPage() {
-  const [loading, setLoading] = useState(false);
+  const { data: session, status } = useSession();
   const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -44,6 +53,20 @@ export default function LoginPage() {
     },
   });
 
+  // =====================
+  // 🔥 Redirect if logged in
+  // =====================
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (session) {
+      router.push("/"); // لو عامل لوجين يروح للهوم
+    }
+  }, [session, status, router]);
+
+  // =====================
+  // 📌 Handle submit
+  // =====================
   const onSubmit = async (values) => {
     setLoading(true);
     setErrorMsg("");
@@ -56,19 +79,19 @@ export default function LoginPage() {
 
     setLoading(false);
 
-    // ❌ لو فيه خطأ في تسجيل الدخول
     if (res?.error) {
-      console.log("Login failed:", res.error);
       setErrorMsg("رقم الهاتف أو كلمة المرور غير صحيحة");
       return;
     }
 
-    // ✅ تسجيل الدخول ناجح
     if (res?.ok) {
-      console.log("Login successful:", res);
+      router.push("/");
     }
   };
 
+  // =====================
+  // 🎬 Init AOS
+  // =====================
   useEffect(() => {
     AOS.init({
       duration: 800,
@@ -77,9 +100,22 @@ export default function LoginPage() {
     });
   }, []);
 
+  // =====================
+  // ⏳ Loading state (optional)
+  // =====================
+  if (status === "loading") {
+    return <p className="text-center mt-20 text-xl">جار التحميل...</p>;
+  }
+
+  // لو فيه سيشن مش هيعرض الفورم (هيعمل ريندر لحظة ويمشي للريكدايركت)
+  if (session) return null;
+
+  // =====================
+  // 🎨 UI
+  // =====================
   return (
     <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gradient-to-t md:bg-gradient-to-r from-blue-600 to-gray-50 px-4">
-      {/* العنوان يظهر من اليمين للشمال */}
+      {/* اللوغو الجانبي */}
       <div
         data-aos="fade-left"
         className="hidden md:flex flex-col justify-center items-center w-[400px] h-[400px]"
@@ -90,7 +126,7 @@ export default function LoginPage() {
         <p className="text-gray-600 mt-2 text-4xl font-bold">Store</p>
       </div>
 
-      {/* الفورم يظهر من الأسفل للأعلى */}
+      {/* الفورم */}
       <div
         data-aos="fade-up"
         className="w-full max-w-xl shadow-md border bg-white rounded-2xl mt-6 md:mt-0 md:ml-10 z-10"
@@ -108,7 +144,7 @@ export default function LoginPage() {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4 text-right"
               >
-                {/* رقم الهاتف */}
+                {/* phone */}
                 <FormField
                   control={form.control}
                   name="phone"
@@ -116,19 +152,14 @@ export default function LoginPage() {
                     <FormItem>
                       <FormLabel>رقم الهاتف</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder=""
-                          type="tel"
-                          className="text-right"
-                          {...field}
-                        />
+                        <Input type="tel" className="text-right" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* كلمة المرور */}
+                {/* password */}
                 <FormField
                   control={form.control}
                   name="password"
@@ -136,19 +167,14 @@ export default function LoginPage() {
                     <FormItem>
                       <FormLabel>كلمة المرور</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder=""
-                          type="password"
-                          className="text-right"
-                          {...field}
-                        />
+                        <Input type="password" className="text-right" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* هل نسيت كلمة المرور؟ */}
+                {/* forgot password */}
                 <div className="text-left mt-[-8px]">
                   <Link
                     href={"/forgot-password"}
@@ -167,13 +193,12 @@ export default function LoginPage() {
                 </Button>
               </form>
             </Form>
+
             {errorMsg && (
-              <p className="text-red-600 text-sm text-center mt-2">
-                {errorMsg}
-              </p>
+              <p className="text-red-600 text-sm text-center mt-2">{errorMsg}</p>
             )}
 
-            {/* لينك التسجيل */}
+            {/* register link */}
             <div className="text-center text-sm text-gray-600 mt-4">
               ليس لديك حساب؟{" "}
               <a
