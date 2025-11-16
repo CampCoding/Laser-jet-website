@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "./_commponent/homepage/NavBar/NavBar";
 import "aos/dist/aos.css";
 import Footer from "./_commponent/homepage/Footer/Footer";
+import NextAuthProvider from "./providers/NextAuthProvider";
 
 export const metadata = {
   title: "Create Next App",
@@ -19,9 +20,14 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ar">
       <body dir="rtl" className={`  antialiased ${notoKufiArabic.className}`}>
-        <Navbar />
+        <NextAuthProvider>
+
+ <Navbar />
         <main className="p-">{children}</main>
         <Footer />
+
+        </NextAuthProvider>
+       
 
       </body>
     </html>

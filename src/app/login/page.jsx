@@ -6,6 +6,9 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
 import {
   Form,
   FormField,
@@ -14,12 +17,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
 import AOS from "aos";
@@ -36,7 +34,8 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-
+  const router = useRouter();
+  const [errorMsg, setErrorMsg] = useState("");
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,12 +46,29 @@ export default function LoginPage() {
 
   const onSubmit = async (values) => {
     setLoading(true);
-    console.log("Login data:", values);
-    // هنا ممكن تضيف API call
-    setTimeout(() => setLoading(false), 1000);
+    setErrorMsg("");
+
+    const res = await signIn("credentials", {
+      phone: values.phone,
+      password: values.password,
+      redirect: false,
+    });
+
+    setLoading(false);
+
+    // ❌ لو فيه خطأ في تسجيل الدخول
+    if (res?.error) {
+      console.log("Login failed:", res.error);
+      setErrorMsg("رقم الهاتف أو كلمة المرور غير صحيحة");
+      return;
+    }
+
+    // ✅ تسجيل الدخول ناجح
+    if (res?.ok) {
+      console.log("Login successful:", res);
+    }
   };
 
-  // تهيئة AOS عند تحميل الكومبوننت
   useEffect(() => {
     AOS.init({
       duration: 800,
@@ -63,7 +79,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gradient-to-t md:bg-gradient-to-r from-blue-600 to-gray-50 px-4">
-      
       {/* العنوان يظهر من اليمين للشمال */}
       <div
         data-aos="fade-left"
@@ -152,6 +167,11 @@ export default function LoginPage() {
                 </Button>
               </form>
             </Form>
+            {errorMsg && (
+              <p className="text-red-600 text-sm text-center mt-2">
+                {errorMsg}
+              </p>
+            )}
 
             {/* لينك التسجيل */}
             <div className="text-center text-sm text-gray-600 mt-4">
@@ -169,5 +189,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-
