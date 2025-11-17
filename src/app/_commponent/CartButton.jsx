@@ -42,39 +42,88 @@
 // components/AddToCartButton.jsx
 "use client";
 
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-
-
+import AddToCart from "@/CartAction/AddToCart";
+import GetMytoken from "@/lib/GetuserToken";
 
 export default function AddToCartButton({ product }) {
+
   console.log(product);
 
-
-
-
+  // الحالة بتبدأ حسب الداتا اللي جاية من الـ API
+  const [inCart, setInCart] = useState(product.isInCart === 1);
+  const [qty, setQty] = useState(product.quantity || 1);
   const [loading, setLoading] = useState(false);
 
+  const increase = () => setQty(prev => prev + 1);
 
-
-  function handleClick() {
-    setLoading(true);
-    try {
-      addToCart(product); // إضافة المنتج للكارت
-    } catch (error) {
-      console.error("خطأ في إضافة المنتج للكارت:", error);
-    } finally {
-      setLoading(false);
+  const decrease = () => {
+    if (qty > 1) {
+      setQty(prev => prev - 1);
     }
-  }
+  };
+
+  const addToCart = () => {
+    setLoading(true);
+
+    console.log("إضافة للسلة:", {
+      productId: product.product_id,
+      quantity: qty,
+    });
+
+    // لما تتم الإضافة يظهر + - ويختفي زرار الإضافة
+    setTimeout(() => {
+      setInCart(true);
+      setLoading(false);
+    }, 600);
+  };
+
+
+async function addtocartfirstacton(productId){
+  const data = await AddToCart(productId)
+  console.log(data);
+  // const token = await GetMytoken()
+  // console.log(token);
+}
+
+
 
   return (
-    <Button
-      onClick={handleClick}
-      disabled={loading}
-      className= "cursor-pointer w-1/2 mx-auto bg-green-600 hover:bg-green-700 text-white rounded-2xl px-4 py-2"
-    >
-      {loading ? "جاري الإضافة..." : "أضف إلى الكارت"}
-    </Button>
+    <div className="flex items-center justify-between gap-2 w-full">
+
+      {/* 🔹 لو المنتج مش موجود → زرار إضافة فقط */}
+      {!inCart && (
+        <Button
+          onClick={() => addtocartfirstacton(product.product_id)}
+          disabled={loading}
+          className="cursor-pointer w-full bg-green-600 hover:bg-green-700 text-white rounded-2xl px-4 py-2"
+        >
+          {loading ? "جاري الإضافة..." : "أضف إلى الكارت"}
+        </Button>
+      )}
+
+      {/* 🔹 لو المنتج موجود → + - والعدد فقط */}
+      {inCart && (
+        <>
+          <button
+            onClick={decrease}
+            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-lg font-bold hover:bg-gray-200"
+          >
+            -
+          </button>
+
+          <span className="w-8 text-center font-semibold">{qty}</span>
+
+          <button
+            onClick={increase}
+            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-lg font-bold hover:bg-gray-200"
+          >
+            +
+          </button>
+        </>
+      )}
+    </div>
   );
 }
+

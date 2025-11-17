@@ -38,7 +38,7 @@ export default function Page() {
   async function GetSpasificCag(id) {
     try {
       const res = await SpasificCatg(id);
-      console.log("API Response:", res);
+      console.log(res.data.products);
 
       if (res.success && res.data && res.data.products) {
         setProducts(res.data.products);
@@ -161,7 +161,8 @@ export default function Page() {
                     متوفر الآن
                   </span>
 
-                  <AddToCartButton />
+             <AddToCartButton product={product} />
+
                 </div>
               </CardContent>
             </Card>

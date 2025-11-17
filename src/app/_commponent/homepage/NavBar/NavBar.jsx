@@ -36,7 +36,7 @@ console.log(session);
     { name: "طلباتي", icon: <ShoppingCart size={20} />, path: "/orders" },
     { name: "العروض", icon: <Tag size={20} />, path: "/offers" },
     { name: "السلة", icon: <ShoppingCart size={20} />, path: "/cart" },
-    { name: "المزيد", icon: <MoreHorizontal size={20} />, path: "/more" },
+   
   ];
 
   // sync active link مع مسار الصفحة
