@@ -1,9 +1,10 @@
 
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import ShowWishList from "@/CartAction/ShowWishList";
 
 // 🔹 نفس الداتا اللي بعتها بالظبط
 const initialWishlist = {
@@ -384,6 +385,18 @@ export default function WishlistPage() {
     console.log("Add to cart:", item.product_id);
     alert("تم إضافة المنتج إلى السلة (تجريبيًا) 👍");
   };
+
+async function GetDataInwishList() {
+  const data= await ShowWishList()
+  console.log(data);
+}
+
+
+
+useEffect(() => {
+  GetDataInwishList()
+})
+
 
   return (
     <main

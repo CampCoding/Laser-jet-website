@@ -1,15 +1,9 @@
+// ⭐ إضافة imports كما هي
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { Heart, Star, Search } from "lucide-react";
 import "aos/dist/aos.css";
@@ -17,6 +11,8 @@ import AOS from "aos";
 import Container from "../../_commponent/utils/Container";
 import AddToCartButton from "../../_commponent/CartButton";
 import SpasificCatg from "@/CallApi/SpasificCath";
+import AddToWishList from "@/CartAction/AddToWishList";
+import { toast } from "sonner";
 
 export default function Page() {
   const { id } = useParams();
@@ -24,7 +20,43 @@ export default function Page() {
   const name = searchParams.get("name");
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [products, setProducts] = useState([]); // <-- هنا نخزن المنتجات
+  const [products, setProducts] = useState([]);
+
+  // ⭐ المفضلة لكل منتج
+  const [favorites, setFavorites] = useState({});
+
+  // ⭐ تحميل المفضلة من localStorage عند فتح الصفحة
+  useEffect(() => {
+    const saved = localStorage.getItem("wishlist");
+    if (saved) setFavorites(JSON.parse(saved));
+  }, []);
+
+  // ⭐ نفس فانكشن الفيفوريت
+  async function HandleTowishlist(product_id) {
+    try {
+      const data = await AddToWishList(product_id);
+
+      if (data.success === true) {
+        setFavorites((prev) => {
+          const newState = {
+            ...prev,
+            [product_id]: !prev[product_id],
+          };
+
+          localStorage.setItem("wishlist", JSON.stringify(newState));
+
+          return newState;
+        });
+
+        toast.success(data.message, {
+          duration: 4000,
+          position: "top-center",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   useEffect(() => {
     AOS.init({
@@ -34,12 +66,9 @@ export default function Page() {
     });
   }, []);
 
-  // 🔹 دالة لجلب المنتجات من الـ API
   async function GetSpasificCag(id) {
     try {
       const res = await SpasificCatg(id);
-      console.log(res.data.products);
-
       if (res.success && res.data && res.data.products) {
         setProducts(res.data.products);
       }
@@ -49,17 +78,12 @@ export default function Page() {
   }
 
   useEffect(() => {
-    if (id) {
-      GetSpasificCag(id);
-    }
+    if (id) GetSpasificCag(id);
   }, [id]);
 
-  // 🔍 Filter products by search term (title + description)
   const filteredProducts = useMemo(() => {
     if (!searchTerm.trim()) return products;
-
     const q = searchTerm.toLowerCase();
-
     return products.filter((product) => {
       const title = product.title.toLowerCase();
       const desc = product.description.toLowerCase();
@@ -69,15 +93,12 @@ export default function Page() {
 
   return (
     <Container>
-      {/* Header + search bar */}
+      {/* Header + search */}
       <div className="flex flex-col gap-4 my-10 md:my-16 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-blue-600 animate-underline">
-            {name}
-          </h2>
+          <h2 className="text-3xl font-bold text-blue-600 animate-underline">{name}</h2>
           <p className="mt-2 text-sm text-gray-500">
-            عدد المنتجات:{" "}
-            <span className="font-semibold">{filteredProducts.length}</span>
+            عدد المنتجات: <span className="font-semibold">{filteredProducts.length}</span>
           </p>
         </div>
 
@@ -93,7 +114,7 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Empty state if no results */}
+      {/* المنتجات */}
       {filteredProducts.length === 0 ? (
         <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-gray-50">
           <p className="text-gray-500 text-sm md:text-base">
@@ -108,12 +129,27 @@ export default function Page() {
               className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white/80 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl"
               data-aos="fade-up"
             >
-              {/* Favorite */}
+              {/* ⭐ زر الفيفوريت */}
               <button
                 type="button"
-                className="absolute left-4 top-4 z-10 rounded-full bg-white/80 p-1.5 shadow-sm transition hover:bg-white"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  HandleTowishlist(product.product_id);
+                }}
+                className={`absolute cursor-pointer left-4 top-4 z-10 p-2 rounded-full shadow-sm transition ${
+                  favorites[product.product_id]
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-white/80 hover:bg-red-100"
+                }`}
               >
-                <Heart className="h-5 w-5 text-red-500 transition group-hover:scale-110" />
+                <Heart
+                  className={`h-5 w-5 transition ${
+                    favorites[product.product_id]
+                      ? "text-white scale-110"
+                      : "text-red-500 group-hover:scale-110"
+                  }`}
+                />
               </button>
 
               <CardHeader className="flex flex-col items-center p-4">
@@ -161,8 +197,7 @@ export default function Page() {
                     متوفر الآن
                   </span>
 
-             <AddToCartButton product={product} />
-
+                  <AddToCartButton product={product} />
                 </div>
               </CardContent>
             </Card>
@@ -172,4 +207,3 @@ export default function Page() {
     </Container>
   );
 }
-

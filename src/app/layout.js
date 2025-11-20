@@ -5,7 +5,7 @@ import "aos/dist/aos.css";
 import Footer from "./_commponent/homepage/Footer/Footer";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import { MyContextProvider } from "@/providers/OtpContext";
-
+import { Toaster } from "@/components/ui/sonner"
 
 export const metadata = {
   title: "Create Next App",
@@ -27,6 +27,7 @@ export default function RootLayout({ children }) {
 
  <Navbar />
         <main className="p-">{children}</main>
+          <Toaster /> 
         <Footer />
 
 </MyContextProvider>
