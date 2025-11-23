@@ -30,12 +30,12 @@ export default function ProductDetailsPage() {
   const [isFav, setIsFav] = useState(false);
   const [product, setProduct] = useState(null);
   const { id } = useParams();
-  console.log(id);
+
 const[alltext,setalltext]=useState(false)
   async function GetSpasificdata(id) {
     const data = await SpasificProd(id);
     if (data.message === "تم جلب المنتج بنجاح") {
-      console.log(data);
+     
       setProduct(data.data.products[0]); // أول منتج فقط
     }
   }

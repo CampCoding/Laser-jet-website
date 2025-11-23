@@ -1,4 +1,3 @@
-// ⭐ إضافة imports كما هي
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
@@ -12,6 +11,7 @@ import Container from "../../_commponent/utils/Container";
 import AddToCartButton from "../../_commponent/CartButton";
 import SpasificCatg from "@/CallApi/SpasificCath";
 import AddToWishList from "@/CartAction/AddToWishList";
+import ShowWishList from "@/CartAction/ShowWishList"; // جلب الويش ليست الحقيقية
 import { toast } from "sonner";
 
 export default function Page() {
@@ -21,64 +21,51 @@ export default function Page() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
-
-  // ⭐ المفضلة لكل منتج
   const [favorites, setFavorites] = useState({});
 
-  // ⭐ تحميل المفضلة من localStorage عند فتح الصفحة
-  useEffect(() => {
-    const saved = localStorage.getItem("wishlist");
-    if (saved) setFavorites(JSON.parse(saved));
-  }, []);
-
-  // ⭐ نفس فانكشن الفيفوريت
-  async function HandleTowishlist(product_id) {
+  // ⭐ تحميل الويش ليست الحقيقية من backend
+  async function syncFavorites(productList) {
     try {
-      const data = await AddToWishList(product_id);
-
-      if (data.success === true) {
-        setFavorites((prev) => {
-          const newState = {
-            ...prev,
-            [product_id]: !prev[product_id],
-          };
-
-          localStorage.setItem("wishlist", JSON.stringify(newState));
-
-          return newState;
-        });
-
-        toast.success(data.message, {
-          duration: 4000,
-          position: "top-center",
-        });
-      }
-    } catch (error) {
-      console.error(error);
+      const wishData = await ShowWishList();
+      const wishItems = wishData?.data || [];
+      const newFavorites = {};
+      productList.forEach(p => {
+        newFavorites[p.product_id] = wishItems.some(w => w.product_id === p.product_id);
+      });
+      setFavorites(newFavorites);
+    } catch (err) {
+      console.error("Error syncing wishlist:", err);
     }
   }
 
-  useEffect(() => {
-    AOS.init({
-      duration: 800,
-      easing: "ease-in-out",
-      once: true,
-    });
-  }, []);
+  async function HandleTowishlist(product_id) {
+    try {
+      const data = await AddToWishList(product_id);
+      if (data.success) {
+        toast.success(data.message, { duration: 4000, position: "top-center" });
+        // إعادة مزامنة favorites بعد الإضافة/الحذف
+        syncFavorites(products);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   async function GetSpasificCag(id) {
     try {
       const res = await SpasificCatg(id);
-      if (res.success && res.data && res.data.products) {
+      if (res.success && res.data?.products) {
         setProducts(res.data.products);
+        syncFavorites(res.data.products); // مزامنة القلوب عند تحميل المنتجات
       }
-    } catch (error) {
-      console.error("حدث خطأ أثناء جلب المنتجات:", error);
+    } catch (err) {
+      console.error("حدث خطأ أثناء جلب المنتجات:", err);
     }
   }
 
   useEffect(() => {
     if (id) GetSpasificCag(id);
+    AOS.init({ duration: 800, easing: "ease-in-out", once: true });
   }, [id]);
 
   const filteredProducts = useMemo(() => {
@@ -101,7 +88,6 @@ export default function Page() {
             عدد المنتجات: <span className="font-semibold">{filteredProducts.length}</span>
           </p>
         </div>
-
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input

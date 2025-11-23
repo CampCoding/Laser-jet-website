@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import GetCartData from "@/CartAction/GetCartData";
+import DeletePtoductitem from "@/CartAction/DeleteProduct";
 
 // helper لتنسيق السعر
 const formatPrice = (value) =>
@@ -13,39 +15,38 @@ const formatPrice = (value) =>
     maximumFractionDigits: 2,
   }).format(value);
 
-// 👇 دالة جلب الكارت
-async function getCart() {
-  // مؤقتًا داتا ثابتة
-  return {
-    success: true,
-    message: "تم جلب سلة تسوقك بنجاح",
-    data: [
-      {
-        product_id: 175,
-        quantity: 1,
-        sell_price: 1980,
-        title: "خلاط مع 2 مطحنة",
-        images:
-          "https://camp-coding.site/laserjet/uploads/products/1762883330028.jpg",
-        offer: { offer_value: 4, sell_value: 1900.8 },
-      },
-      {
-        product_id: 187,
-        quantity: 1,
-        sell_price: 22277.8,
-        title:
-          "Oppo Reno14 F 5G - 256GB/12GB - Opal Blue (صنع في مصر)",
-        images:
-          "https://camp-coding.site/laserjet/uploads/products/1762880050417.png",
-        offer: { offer_value: 16.5, sell_value: 18601.963 },
-      },
-    ],
-  };
-}
+
 
 export default function CartPage() {
   const { data: session, status } = useSession();
   const [cart, setCart] = useState(null);
+useEffect(() => {
+  async function fetchCart() {
+    const data = await GetCartData();
+    console.log("Cart Data:", data);
+
+    // لو حصل خطأ أو التوكن مش موجود
+    if (!data?.success) {
+      setCart({ data: [] });
+      return;
+    }
+
+    setCart(data);
+  }
+
+  fetchCart();
+}, []);
+
+async function Deletprod(product_id) {
+  const data= await DeletePtoductitem(product_id);
+  console.log("Delete Product Response:", data);
+  if(data.success){
+    // إعادة جلب بيانات السلة بعد الحذف
+    const updatedCart = await GetCartData();
+    setCart(updatedCart);
+  }
+}
+
 
   useEffect(() => {
     async function fetchCart() {
@@ -91,6 +92,10 @@ export default function CartPage() {
     0
   );
   const totalDiscount = subtotal - totalWithOffers;
+
+
+
+
 
   return (
     <main
@@ -161,7 +166,7 @@ export default function CartPage() {
                     </div>
 
                     <div className="flex flex-col items-end gap-2 text-xs">
-                      <button className="rounded-full border border-gray-300 px-3 py-1 hover:bg-gray-50">
+                      <button onClick={() => Deletprod(item.product_id)} className="cursor-pointer rounded-full border border-gray-300 px-3 py-1 hover:bg-gray-50">
                         إزالة من السلة
                       </button>
                     </div>

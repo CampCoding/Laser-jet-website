@@ -17,6 +17,7 @@ import Link from "next/link";
 import Container from "../../utils/Container";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import GetMytoken from "@/lib/GetuserToken";
 
 export default function Navbar() {
   const session = useSession();
@@ -33,6 +34,8 @@ export default function Navbar() {
     { name: "السلة", icon: <ShoppingCart size={20} />, path: "/cart" },
     { name: "المفضلة", icon: <Heart size={20} />, path: "/wishlist" },
   ];
+
+
 
   useEffect(() => {
     const current = links.find((link) => link.path === pathname);

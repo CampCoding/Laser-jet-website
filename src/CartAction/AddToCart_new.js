@@ -3,9 +3,8 @@ import GetMytoken from "@/lib/GetuserToken"
 
 export default async function AddToCart(product_id) {
     const token = await GetMytoken()
-    console.log("token", token)
 
-    // التحقق من وجود توكن للمستخدم (تسجيل الدخول)
+
     if (!token) {
         return {
             success: false,
@@ -21,7 +20,7 @@ export default async function AddToCart(product_id) {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({product_id, type: "increment"})
+        body: JSON.stringify({product_id, type: "decrement"})
     }
     )
     const data = await res.json()
