@@ -21,6 +21,11 @@ import GetMytoken from "@/lib/GetuserToken";
 
 export default function Navbar() {
   const session = useSession();
+
+  async function fetchToken() {
+    const token = await GetMytoken();
+    console.log("User Token:", token);
+  }
   const [activeLink, setActiveLink] = useState("الرئيسية");
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -41,6 +46,12 @@ export default function Navbar() {
     const current = links.find((link) => link.path === pathname);
     if (current) setActiveLink(current.name);
   }, [pathname]);
+
+
+useEffect(() => {
+    fetchToken();
+  }, []);
+
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);

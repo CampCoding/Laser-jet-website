@@ -18,11 +18,30 @@ import {
   Receipt,
   Send,
 } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import GetProfileDtat from "@/CallApi/GetProfileDtat";
+import { useEffect, useState } from "react";
 
 export default function AccountSidebar() {
-const session = useSession();
-console.log(session);
+const[AcountDtat,setAcountDtat]=useState([]);
+async function HandleProfileData(){
+
+    const data= await GetProfileDtat();
+    if(data.success){
+        setAcountDtat(data.data);
+    }
+ 
+}
+
+
+useEffect(() => {
+  HandleProfileData();
+}, []);
+
+
+
+
+
 
   return (
     <aside
@@ -36,9 +55,9 @@ console.log(session);
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-semibold text-blue-600">
-            محمد السيد
+           {AcountDtat.username}
           </span>
-          <span className="text-xs text-slate-500">01289790034</span>
+          <span className="text-xs text-slate-500">{AcountDtat.phone}</span>
         </div>
       </div>
 
@@ -48,7 +67,7 @@ console.log(session);
           <div className="space-y-0.5">
             <p className="text-xs text-slate-500">رصيد المحفظة</p>
             <p className="text-sm font-semibold text-blue-600">
-              0.00 <span className="text-xs text-slate-500">جنيه</span>
+              {AcountDtat.balance} <span className="text-xs text-slate-500">جنيه</span>
             </p>
           </div>
           <Wallet className="h-6 w-6 text-slate-500" />
@@ -57,13 +76,15 @@ console.log(session);
 
       {/* القائمة الرئيسية */}
       <nav className="mt-4 space-y-1 text-sm">
-        <SidebarLink href="/wallet" label="المحفظة" icon={Wallet} />
+        <SidebarLink href="/account/wallet" label="المحفظة" icon={Wallet} />
         <SidebarLink href="/wallet/ibda" label="الإبداع" icon={Landmark} />
         <SidebarLink href="/wallet/send" label="إرسال الأموال" icon={Send} />
-        <SidebarLink href="/wallet/transactions" label="المعاملات" icon={Receipt} />
+        <SidebarLink href="/account/Transactions" label="المعاملات" icon={Receipt} />
+
         <SidebarLink href="/wallet/mini" label="محفظة ميني" icon={Wallet} />
         <SidebarLink href="/wallet/service-mini" label="خدمة ميني مالي" icon={CreditCard} />
-        <SidebarLink href="/wallet/installments" label="الأقساط" icon={CreditCard} />
+        <SidebarLink href="/account/Installments" label="الأقساط" icon={CreditCard} />
+        <SidebarLink href="/account/fines" label="الغرامات" icon={CreditCard} />
 
         {/* المبالغ – ممكن تخليهم مجرد معلومات بدون روابط */}
         <SidebarInfo
@@ -98,6 +119,7 @@ console.log(session);
         type="button"
         className="mt-6 cursor-pointer flex w-full items-center justify-center gap-2 rounded-full bg-red-50 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100"
         onClick={() => {
+        signOut({ callbackUrl: "/login" })
           // TODO: استبدلها بمنطق تسجيل الخروج الحقيقي (next-auth signOut مثلاً)
           console.log("Logout clicked");
         }}

@@ -7,7 +7,7 @@ import AddToCart from "@/CartAction/AddToCart";
 import { toast } from "sonner";
 import DecrementProduct from "@/CartAction/DecrementProduct";
 
-export default function AddToCartButton({ product }) {
+export default function NewAddToCartButton({ product }) {
 
 
   const[qunty,setqty]=useState(product.quantity)
@@ -79,18 +79,10 @@ setInCart(!inCart);
 
   return (
     <div className="flex items-center justify-between gap-2 w-full">
-      {!inCart &&   (
-        <Button
-          onClick={() => addtocartfirstaction(product.product_id)}
-          disabled={loading}
-          className="cursor-pointer w-full bg-green-600 hover:bg-green-700 text-white rounded-2xl px-4 py-2"
-        >
-          {loading ? "جاري الإضافة..." : "أضف إلى الكارت"}
-        </Button>
-      )}
-      {}
+   
+  
 
-      {inCart &&  (
+      
         <>
           <button
             onClick={() =>{
@@ -118,8 +110,7 @@ GetDecrementProduct(product.product_id);
 </button>
 
         </>
-      )}
+    
     </div>
   );
 }
-

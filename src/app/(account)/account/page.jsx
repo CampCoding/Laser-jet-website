@@ -1,8 +1,10 @@
 
 
+import GetProfileDtat from '@/CallApi/GetProfileDtat';
 import React from 'react'
 
-const Account = () => {
+const Account = async () => {
+
   return (
     <div>
         hello there

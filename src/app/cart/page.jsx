@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import GetCartData from "@/CartAction/GetCartData";
 import DeletePtoductitem from "@/CartAction/DeleteProduct";
+import AddToCartButton from "../_commponent/CartButton";
+import NewAddToCartButton from "../_commponent/NewCartButton";
 
 // helper لتنسيق السعر
 const formatPrice = (value) =>
@@ -166,9 +168,11 @@ async function Deletprod(product_id) {
                     </div>
 
                     <div className="flex flex-col items-end gap-2 text-xs">
-                      <button onClick={() => Deletprod(item.product_id)} className="cursor-pointer rounded-full border border-gray-300 px-3 py-1 hover:bg-gray-50">
+                      <button onClick={() => Deletprod(item.product_id)} className="hover:bg-red-600 hover:text-white transition duration-150 cursor-pointer rounded-full border border-gray-300 px-3 py-1 hover:bg-gray-50">
                         إزالة من السلة
                       </button>
+ <NewAddToCartButton product={item} />
+
                     </div>
                   </div>
                 </div>
