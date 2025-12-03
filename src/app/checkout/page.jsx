@@ -280,13 +280,15 @@ const createOrder = async (payment_type, payment_method ,installments = []) => {
 // تحويل المستخدم
 router.push('/');
     // لو الدفع كريديت — افتح الليينك
-    if (payment_method === "credit") {
+     if (payment_method === "credit") {
        const paymentUrl = response.data?.data?.message?.data?.url;
-       if(paymentUrl){
-        window.open(paymentUrl,'_blank')
+       if (paymentUrl) {
+        if (typeof window !== "undefined") {
+         window.open(paymentUrl, "_blank");
+        }
         return;
        }
-    }
+     }
     
     // تفريغ السلة
 setCart({ data: [] });
