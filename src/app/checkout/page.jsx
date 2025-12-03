@@ -12,7 +12,8 @@ import AddAddressModal, { governoratesData } from "../components/AddAddressModal
 import axios from "axios";
 import { toast } from "sonner";
 import { SquarePen, Trash } from "lucide-react";
-import MapSelector from "../components/MapSelector";
+import dynamic from "next/dynamic";
+const MapSelector = dynamic(() => import("../components/MapSelector"), { ssr: false });
 
 
 const formatPrice = (value) =>
