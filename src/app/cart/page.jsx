@@ -279,7 +279,7 @@ export default function CartPage() {
             }
             router.push("/checkout");
           }}
-          className="mt-5 w-full rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 text-center block"
+          className="mt-5 w-full cursor-pointer rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 text-center block"
         >
           إتمام الشراء
         </button>

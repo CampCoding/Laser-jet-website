@@ -4,13 +4,10 @@ import { motion } from "framer-motion";
 
 export default function Loading() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-t md:bg-gradient-to-r from-blue-600 to-gray-50">
+    <div className="min-h-screen flex flex-col items-center justify-center ">
       {/* العنوان */}
       <div className="flex flex-col justify-center items-center mb-10">
-        <h1 className="text-6xl font-extrabold text-blue-700 drop-shadow-md tracking-wide">
-          Laserjet
-        </h1>
-        <p className="text-gray-600 mt-2 text-4xl font-bold">Store</p>
+        <img src="/logo.png" alt="" />
       </div>
 
       {/* اللودر */}

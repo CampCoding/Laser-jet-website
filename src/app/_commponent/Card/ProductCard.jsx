@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import AddToWishList from "../../../CartAction/AddToWishList";
 import { toast } from "sonner";
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product , onWishlistChange = ()=>{} }) {
   const [inFav, setInFav] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
 
@@ -39,6 +39,7 @@ export default function ProductCard({ product }) {
           position: "top-center",
         });
         setInFav((prev) => !prev);
+        onWishlistChange();
       } else {
         toast.error(data?.message || "حدث خطأ أثناء تحديث المفضلة");
       }

@@ -25,13 +25,12 @@ import GetMytoken from "@/lib/GetuserToken";
 import { Whatsapp } from "../../icons";
 import SearchOverlay from "../../SearchMobileOverlay";
 import DesktopSearch from "./../../DesktopSearch";
-import { useDispatch, useSelector } from "react-redux"; // ✅ NEW
+import { useDispatch, useSelector } from "react-redux";
 import { getCartThunk } from "../../../../store/cartSlice";
 
 export default function Navbar() {
   const session = useSession();
   const accessToken = session?.data?.user?.accessToken;
-  console.log("sessionData", session);
   const pathname = usePathname();
   const dispatch = useDispatch();
 
@@ -103,74 +102,80 @@ export default function Navbar() {
   }, [menuOpen]);
 
   return (
-    <header className="w-full">
+    <header
+      className={`sticky top-0 z-50 w-full bg-white/95 ${
+        scrolled ? "shadow-md" : ""
+      }`}
+    >
       {/* 🔵 Top blue strip */}
-      <div className="w-full bg-[#0648af] text-white">
-        <div className="container mx-auto flex gap-2 px-4 py-2 md:flex-row justify-between">
-          {/* Left: Offers + WhatsApp */}
-          <div className="flex flex-wrap items-center justify-between gap-2 md:w-auto md:justify-end">
-            <Link key={"Offers"} href={"/offers"} className="hidden md:block">
-              <button
-                type="button"
-                className="flex cursor-pointer items-center gap-1 rounded-full border border-white/60 px-3 py-1.5 text-[12px] font-bold transition hover:bg-white hover:text-blue-700 md:text-sm"
-              >
-                <Tag size={18} />
-                <span>عروضنا</span>
-              </button>
-            </Link>
+     {!scrolled &&
+       <div className="w-full bg-[#0648af] text-white">
+       <div className="container mx-auto flex gap-2 px-4 py-2 md:flex-row justify-between">
+         {/* Left: Offers + WhatsApp */}
+         <div className="flex flex-wrap items-center justify-between gap-2 md:w-auto md:justify-end">
+           <Link key={"Offers"} href={"/offers"} className="hidden md:block">
+             <button
+               type="button"
+               className="flex cursor-pointer items-center gap-1 rounded-full border border-white/60 px-3 py-1.5 text-[12px] font-bold transition hover:bg-white hover:text-blue-700 md:text-sm"
+             >
+               <Tag size={18} />
+               <span>عروضنا</span>
+             </button>
+           </Link>
 
-            <div className="flex items-center gap-2 md:border-r md:border-white/40 md:pr-4">
-              <span className="text-[11px] md:text-sm">تواصل معنا على:</span>
-              <Link
-                href="#"
-                className="rounded-full bg-white p-2 shadow transition hover:scale-110"
-              >
-                <Whatsapp />
-              </Link>
-            </div>
-          </div>
+           <div className="flex items-center gap-2 md:border-r md:border-white/40 md:pr-4">
+             <span className="text-[11px] md:text-sm">تواصل معنا على:</span>
+             <Link
+               href="#"
+               className="rounded-full bg-white p-2 shadow transition hover:scale-110"
+             >
+               <Whatsapp />
+             </Link>
+           </div>
+         </div>
 
-          {/* Right: Social links */}
-          <div className="flex  flex-wrap items-center justify-between gap-2 md:w-auto md:justify-start">
-            <Link key={"Orders"} href={"/orders"} className="hidden md:block">
-              <button
-                type="button"
-                className="flex cursor-pointer items-center gap-1 rounded-full border border-white/60 px-3 py-1.5 text-[12px] font-bold transition hover:bg-white hover:text-blue-700 md:text-sm"
-              >
-                <ShoppingCart size={18} />
-                <span>طلباتي</span>
-              </button>
-            </Link>
+         {/* Right: Social links */}
+         <div className="flex  flex-wrap items-center justify-between gap-2 md:w-auto md:justify-start">
+           <Link key={"Orders"} href={"/orders"} className="hidden md:block">
+             <button
+               type="button"
+               className="flex cursor-pointer items-center gap-1 rounded-full border border-white/60 px-3 py-1.5 text-[12px] font-bold transition hover:bg-white hover:text-blue-700 md:text-sm"
+             >
+               <ShoppingCart size={18} />
+               <span>طلباتي</span>
+             </button>
+           </Link>
 
-            <div className="flex items-center gap-2 md:border-r md:border-white/40 md:pr-4">
-              <span className="text-[11px] md:text-sm">تابعنا على:</span>
-              <Link
-                href="#"
-                className="rounded-full bg-white p-2 shadow transition hover:scale-110"
-              >
-                <Facebook className="h-4 w-4 text-blue-700" />
-              </Link>
-              <Link
-                href="#"
-                className="rounded-full bg-white p-2 shadow transition hover:scale-110"
-              >
-                <Instagram className="h-4 w-4 text-pink-600" />
-              </Link>
-              <Link
-                href="#"
-                className="rounded-full bg-white p-2 shadow transition hover:scale-110"
-              >
-                <Youtube className="h-4 w-4 text-red-600" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+           <div className="flex items-center gap-2 md:border-r md:border-white/40 md:pr-4">
+             <span className="text-[11px] md:text-sm">تابعنا على:</span>
+             <Link
+               href="#"
+               className="rounded-full bg-white p-2 shadow transition hover:scale-110"
+             >
+               <Facebook className="h-4 w-4 text-blue-700" />
+             </Link>
+             <Link
+               href="#"
+               className="rounded-full bg-white p-2 shadow transition hover:scale-110"
+             >
+               <Instagram className="h-4 w-4 text-pink-600" />
+             </Link>
+             <Link
+               href="#"
+               className="rounded-full bg-white p-2 shadow transition hover:scale-110"
+             >
+               <Youtube className="h-4 w-4 text-red-600" />
+             </Link>
+           </div>
+         </div>
+       </div>
+     </div>
+     }
 
-      {/* 🧭 Main navbar (✅ sticky) */}
+      {/* 🧭 Main navbar (الهيدر كله sticky الآن) */}
       <nav
-        className={`sticky top-0 z-40 w-full border-b transition-all duration-300 ${
-          scrolled ? "bg-blue-50/80 backdrop-blur-sm shadow-md" : "bg-white/95"
+        className={`w-full border-b transition-all duration-300 ${
+          scrolled ? "bg-blue-50/80 backdrop-blur-sm" : "bg-white/95"
         }`}
       >
         <Container className="mx-auto">

@@ -1,23 +1,11 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import ShowWishList from "@/CartAction/ShowWishList";
-import AddToCartButton from "../_commponent/CartButton";
-import { Heart } from "lucide-react";
 import ProductCard from "../_commponent/Card/ProductCard";
-import AddToWishList from "../../CartAction/AddToWishList";
-import { toast } from "sonner";
 import { Select } from "antd";
 import { useSession } from "next-auth/react";
-// تنسيق السعر
-const formatPrice = (value) =>
-  new Intl.NumberFormat("ar-EG", {
-    style: "currency",
-    currency: "EGP",
-    maximumFractionDigits: 2,
-  }).format(value);
+import useWishlist from "../../../hooks/useGetCustomHook";
 
 // استخراج الماركة من details (العلامة التجارية / ماركة)
 const getBrand = (item) => {
@@ -26,62 +14,107 @@ const getBrand = (item) => {
       (d) =>
         d.label === "العلامة التجارية" ||
         d.label === "ماركة" ||
-        d.label.toLowerCase().includes("brand")
+        d.label?.toLowerCase?.().includes("brand")
     ) || null;
 
   return brandDetail ? brandDetail.value : "غير محدد";
 };
 
 export default function WishlistPage() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
+  const token = session?.user?.accessToken;
 
-  const [items, setItems] = useState([]); // استخدام state ديناميكي
+  // ✅ استخدم الـ hook الجديد
+  const { wishlist: items, loading, error, refetch } = useWishlist(token);
+
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [brandFilter, setBrandFilter] = useState("all");
   const [hasOfferOnly, setHasOfferOnly] = useState(false);
   const [sortBy, setSortBy] = useState("recommended"); // recommended | price-asc | price-desc | offer-first
-  const [favorites, setFavorites] = useState({});
-  // جلب البيانات من API
-  async function GetDataInwishList() {
-    try {
-      const data = await ShowWishList();
-      if (data?.success && data?.data) {
-        setItems(data?.data); // حط كل العناصر اللي رجعت من API
-        console.log("wishlist_data", data);
-      }
-    } catch (error) {
-      console.error("Error fetching wishlist:", error);
-    }
+  // 🌀 حالة التحميل
+  if (loading) {
+    return (
+      <main className="mx-auto container  px-4 md:px-10 py-8 space-y-6 lg:space-y-8">
+        <header className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">قائمة المفضلة</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              جاري تحميل المنتجات المفضلة الخاصة بك...
+            </p>
+          </div>
+        </header>
+
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="h-64 animate-pulse rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+            >
+              <div className="h-32 rounded-xl bg-gray-100 mb-3" />
+              <div className="h-3 w-3/4 rounded-full bg-gray-100 mb-2" />
+              <div className="h-3 w-1/2 rounded-full bg-gray-100 mb-1" />
+              <div className="h-3 w-1/3 rounded-full bg-gray-100" />
+            </div>
+          ))}
+        </div>
+      </main>
+    );
+  }
+  console.log("loading", loading);
+  // لو مش عامل لوجين
+  if (!session) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <svg
+          className="w-20 h-20 text-blue-700 drop-shadow-2xl"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+        >
+          <path
+            fill="currentColor"
+            d="M19 3H5c-1.11 0-2 .89-2 2v4h2V5h14v14H5v-4H3v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2m-8.92 12.58L11.5 17l5-5l-5-5l-1.42 1.41L12.67 11H3v2h9.67z"
+            strokeWidth={0.5}
+            stroke="currentColor"
+          ></path>
+        </svg>
+        <h1 className="text-2xl font-bold mb-4 text-gray-900">
+          الرجاء تسجيل الدخول أولًا
+        </h1>
+        <p className="text-gray-600 mb-6">
+          للوصول إلى قائمة المفضلة الخاصة بك، يجب أن تقوم بتسجيل الدخول.
+        </p>
+        <Link
+          href={{
+            pathname: "/login",
+            query: { redirect: "/wishlist" },
+          }}
+          className="rounded-full bg-blue-600 px-6 py-3 text-white! transition-all! hover:shadow-2xl! hover:scale-110 font-semibold hover:bg-blue-700! "
+        >
+          تسجيل الدخول
+        </Link>
+      </div>
+    );
   }
 
-  useEffect(() => {
-    GetDataInwishList();
-  }, []);
-  async function HandleTowishlist(product_id) {
-    try {
-      const data = await AddToWishList(product_id);
-      if (data.success) {
-        // تحديث favorites
-        const wishData = await ShowWishList();
-        const wishItems = wishData?.data || [];
-        setFavorites((prev) => ({
-          ...prev,
-          [product_id]: wishItems.some((w) => w.product_id === product_id),
-        }));
-
-        // ✅ إزالة العنصر من items لو تم مسحه من المفضلة
-        if (!wishItems.some((w) => w.product_id === product_id)) {
-          setItems((prev) =>
-            prev.filter((item) => item.product_id !== product_id)
-          );
-        }
-
-        toast.success(data.message, { duration: 5000, position: "top-center" });
-      }
-    } catch (error) {
-      console.error(error);
-    }
+  // ❌ حالة الخطأ
+  if (error) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-center">
+          <p className="text-sm font-semibold text-red-700">
+            حدث خطأ أثناء جلب قائمة المفضلة
+          </p>
+          <p className="mt-1 text-xs text-red-500">{error}</p>
+          <button
+            onClick={refetch}
+            className="mt-3 inline-flex items-center justify-center rounded-full bg-red-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      </main>
+    );
   }
 
   // الفئات المتاحة
@@ -91,16 +124,6 @@ export default function WishlistPage() {
       if (item.category?.title) setCat.add(item.category.title);
     });
     return Array.from(setCat);
-  }, [items]);
-
-  // الماركات المتاحة
-  const brands = useMemo(() => {
-    const setBrand = new Set();
-    items.forEach((item) => {
-      const b = getBrand(item);
-      if (b) setBrand.add(b);
-    });
-    return Array.from(setBrand);
   }, [items]);
 
   // تطبيق الفلترة + الترتيب
@@ -150,65 +173,18 @@ export default function WishlistPage() {
     return result;
   }, [items, search, categoryFilter, brandFilter, hasOfferOnly, sortBy]);
 
-  console.log("filteredItems", filteredItems);
-
-  const totalWishlist = useMemo(
-    () =>
-      filteredItems.reduce((sum, item) => {
-        const price = item.offer?.sell_value ?? item.sell_price;
-        return sum + price;
-      }, 0),
-    [filteredItems]
-  );
-
+  // لما المستخدم يشيل منتج من المفضلة (من جوه ProductCard)
   const handleRemove = (id) => {
-    setItems((prev) => prev.filter((p) => p.product_id !== id));
+    // 🔹 مش هنلمس الـ hook نفسه، لكن نعمل refetch بعد شوية
+    // أو تقدر تعتمد على revalidate من API لو AddToWishList بيرجع الليست الجديدة
+    // هنا هنكتفي بـ refetch:
+    refetch();
   };
-
-  const handleAddToCart = (item) => {
-    console.log("Add to cart:", item.product_id);
-    alert("تم إضافة المنتج إلى السلة (تجريبيًا) 👍");
-  };
-
-  // لو مش عامل لوجين
-  if (!session) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <svg
-          className="w-20 h-20 text-blue-700 drop-shadow-2xl"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-        >
-          <path
-            fill="currentColor"
-            d="M19 3H5c-1.11 0-2 .89-2 2v4h2V5h14v14H5v-4H3v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2m-8.92 12.58L11.5 17l5-5l-5-5l-1.42 1.41L12.67 11H3v2h9.67z"
-            strokeWidth={0.5}
-            stroke="currentColor"
-          ></path>
-        </svg>
-        <h1 className="text-2xl font-bold mb-4 text-gray-900">
-          الرجاء تسجيل الدخول أولًا
-        </h1>
-        <p className="text-gray-600 mb-6">
-          للوصول إلى قائمة المفضلة الخاصة بك، يجب أن تقوم بتسجيل الدخول.
-        </p>
-        <Link
-          href={{
-            pathname: "/login",
-            query: { redirect: "/wishlist" },
-          }}
-          className="rounded-full bg-blue-600 px-6 py-3 text-white!  transition-all! hover:shadow-2xl! hover:scale-110 font-semibold hover:bg-blue-700! "
-        >
-          تسجيل الدخول
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <main
       dir="rtl"
-      className="mx-auto max-w-6xl px-4 py-8 space-y-6 lg:space-y-8"
+      className="mx-auto container  px-4 md:px-10 py-8 space-y-6 lg:space-y-8"
     >
       {/* الهيدر */}
       <header className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -316,7 +292,7 @@ export default function WishlistPage() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {filteredItems.map((item) => {
               const normalizedProduct = {
                 product_id: item.product_id,
@@ -325,18 +301,19 @@ export default function WishlistPage() {
                 price: item.offer?.sell_value ?? item.sell_price,
                 images: [
                   {
-                    image_url: item?.images?.[0]?.image || "", // fallback
+                    image_url: item?.images?.[0]?.image || "",
                   },
                 ],
+                offer: item.offer,
+                installments: item.installments,
+                category: item.category,
               };
 
               return (
                 <ProductCard
                   key={item.product_id}
                   product={normalizedProduct}
-                  isFavorite={true}
-                  onToggleFavorite={HandleTowishlist}
-                  AddToCartButton={AddToCartButton}
+                  onWishlistChange={() => handleRemove(item.product_id)}
                 />
               );
             })}

@@ -15,8 +15,6 @@ import {
   Layers,
   CreditCard,
   ChevronLeft,
-  ShareIcon,
-  Share,
   Share2,
 } from "lucide-react";
 import AOS from "aos";
@@ -38,6 +36,7 @@ import "swiper/css/free-mode";
 import "swiper/css/thumbs";
 import AddToCartButton from "./../../_commponent/CartButton";
 import RecommendedProductsSwiper from "../../_commponent/RecommendedProductsSwiper";
+import ShareDropdown from "../../_commponent/ShareButton";
 
 export default function ProductDetailsPage() {
   const [isFav, setIsFav] = useState(false);
@@ -164,7 +163,27 @@ export default function ProductDetailsPage() {
           >
             <CardContent className="p-4">
               {/* Main Swiper */}
-              <div className="grid grid-cols-1 gap-2 w-full">
+              <div className="grid grid-cols-1 relative gap-2 w-full">
+                <div className=" md:hidden w-fit flex items-center gap-2 absolute top-3 right-3 z-10">
+                  <ShareDropdown
+                    url={
+                      typeof window !== "undefined" ? window.location.href : ""
+                    }
+                    title={product?.name || "منتج رائع تستحق مشاركته"}
+                  />
+                   <button
+                    type="button"
+                    onClick={() => HandleTowishlist(product.product_id)}
+                    className="p-2 cursor-pointer rounded-full border border-slate-200 hover:border-rose-400 hover:bg-rose-50 transition-colors"
+                    aria-label="إضافة للمفضلة"
+                  >
+                    <Heart
+                      className={`w-5 h-5 ${
+                        isFavourite ? "fill-rose-500 text-rose-500" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
                 <Swiper
                   modules={[Navigation, Pagination, Thumbs, FreeMode]}
                   navigation
@@ -189,7 +208,7 @@ export default function ProductDetailsPage() {
                         <img
                           src={img.image_url}
                           alt={product.title}
-                          className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-150"
+                          className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-200"
                           style={{
                             transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
                           }}
@@ -387,7 +406,7 @@ export default function ProductDetailsPage() {
 
                 {/* 🛒 الأزرار */}
                 <div className="flex flex-wrap items-center gap-3 mt-2">
-                  <div>
+                  <div className="w-full md:w-auto">
                     <AddToCartButton
                       product={product}
                       inCart={prodData.inCart}
@@ -397,7 +416,7 @@ export default function ProductDetailsPage() {
                   <button
                     type="button"
                     onClick={() => HandleTowishlist(product.product_id)}
-                    className="cursor-pointer inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-rose-400 hover:bg-rose-50 transition-colors"
+                    className=" w-full md:w-auto cursor-pointer inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-rose-400 hover:bg-rose-50 transition-colors"
                   >
                     <Heart
                       className={`w-4 h-4 ${
@@ -406,14 +425,17 @@ export default function ProductDetailsPage() {
                     />
                     {isFavourite ? "في المفضلة" : "أضف للمفضلة"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => HandleTowishlist(product.product_id)}
-                    className="cursor-pointer inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-blue-700 hover:border-blue-400 hover:bg-rose-50 transition-colors"
-                  >
-                    <Share2 className={`w-4 h-4`} />
-                    مشاركة
-                  </button>
+                  <div className="w-full md:w-auto">
+                    <ShareDropdown
+                    buttonTitle={"مشاركة"}
+                      url={
+                        typeof window !== "undefined"
+                          ? window.location.href
+                          : ""
+                      }
+                      title={product?.name || "منتج رائع تستحق مشاركته"}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
