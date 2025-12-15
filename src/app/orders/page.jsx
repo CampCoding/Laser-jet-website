@@ -93,13 +93,13 @@ export default function OrdersList() {
   if (loading) {
     return (
       <section className="py-8 md:py-12" dir="rtl">
-        <div className="mx-auto max-w-5xl px-4">
-          <div className="mb-6 h-8 w-40 animate-pulse rounded-full bg-gray-100" />
+        <div className="mx-auto container md:px-10 px-4">
+          <div className="mb-6 h-8 w-40 animate-pulse rounded-full bg-gray-200" />
           <div className="space-y-4">
-            {[1, 2].map((i) => (
+            {[1, 2 ,3, 4].map((i) => (
               <div
                 key={i}
-                className="h-40 animate-pulse rounded-2xl border border-gray-100 bg-gray-50"
+                className="h-40 animate-pulse rounded-2xl border border-gray-300 bg-gray-100"
               />
             ))}
           </div>
@@ -108,7 +108,7 @@ export default function OrdersList() {
     );
   }
   // لو مش عامل لوجين
-  if (!token) {
+  if (!token && !loading ) {
     return (
       <section className="py-10" dir="rtl">
         <div className="mx-auto max-w-4xl rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
@@ -123,8 +123,6 @@ export default function OrdersList() {
       </section>
     );
   }
-
-
 
   // لو مفيش طلبات
   if (!filteredOrders.length) {
@@ -145,7 +143,7 @@ export default function OrdersList() {
 
   return (
     <section className="py-8 md:py-12" dir="rtl">
-      <div className="mx-auto max-w-5xl px-4">
+      <div className="mx-auto container  px-4 px-10">
         {/* العنوان + عدد الطلبات + per_page */}
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>

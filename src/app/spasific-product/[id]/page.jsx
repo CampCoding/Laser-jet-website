@@ -21,11 +21,9 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import AddToWishList from "../../../CartAction/AddToWishList";
 import ShowWishList from "../../../CartAction/ShowWishList";
 import { toast } from "sonner";
 import useProductData from "../../../../hooks/useGetProductData";
-
 // ✅ Swiper imports
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Thumbs, FreeMode } from "swiper/modules";
@@ -37,6 +35,8 @@ import "swiper/css/thumbs";
 import AddToCartButton from "./../../_commponent/CartButton";
 import RecommendedProductsSwiper from "../../_commponent/RecommendedProductsSwiper";
 import ShareDropdown from "../../_commponent/ShareButton";
+import { useAddToWishList } from "../../../../hooks/useWishlist";
+import { Spinner } from "../../../components/ui/spinner";
 
 export default function ProductDetailsPage() {
   const [isFav, setIsFav] = useState(false);
@@ -46,21 +46,38 @@ export default function ProductDetailsPage() {
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 }); // ✅ لتحديد نقطة الزوم حسب حركة الماوس
 
   const { id } = useParams();
+  const { addToWishList, isLoading: wishLoading } = useAddToWishList({
+    onSuccess: (res) => {
+      // لو requireLogin = true
+      if (res?.requireLogin) {
+        toast.error(res?.message || "سجل الدخول أولاً");
+      }
+    },
+    onError: () => {
+      toast.error("حدث خطأ، حاول مرة أخرى");
+    },
+  });
 
   const { prodData, loading, error, fetchProdData } = useProductData(id);
   const product = prodData?.products?.[0] || null;
   console.log(product, "product");
   async function HandleTowishlist(product_id) {
     try {
-      const data = await AddToWishList(product_id);
-      if (data.success) {
+      const data = await addToWishList(product_id);
+
+      // لو محتاج تسجيل دخول
+      if (data?.requireLogin) return;
+
+      if (data?.success) {
         const wishData = await ShowWishList();
         const wishItems = wishData?.data || [];
         setIsFav(wishItems.some((w) => w.product_id === product_id));
-        toast.success(data.message);
+        toast.success(setIsFav ? "تمت إزالة المنتج من المفضلة" : "تمت إضافة المنتج للمفضلة");
+      } else {
+        toast.error(data?.message || "لم يتم إضافة المنتج للمفضلة");
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       toast.error("حدث خطأ، حاول مرة أخرى");
     }
   }
@@ -103,8 +120,12 @@ export default function ProductDetailsPage() {
   const offerPrice = hasOffer ? Number(product.offer.sell_value) : basePrice;
   const savedAmount = hasOffer ? basePrice - offerPrice : 0;
   const inStock = product.quantity > 0;
-  const mainInstallment = product.installments?.[0];
-
+  const mainInstallments = product.installments;
+  const uniqueInstallments = Array.from(
+    new Map(
+      (mainInstallments || []).map((x) => [x.category_installment_id, x])
+    ).values()
+  ).sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0));
   const formatPrice = (value) => {
     const num = Number(value || 0);
     if (Number.isNaN(num)) return value;
@@ -155,7 +176,7 @@ export default function ProductDetailsPage() {
         </div>
 
         {/* ✅ Main Grid */}
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 container">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:container">
           {/* 🎯 الصور (Swiper + Thumbs) */}
           <Card
             className="shadow-sm border-slate-100 bg-white"
@@ -171,7 +192,7 @@ export default function ProductDetailsPage() {
                     }
                     title={product?.name || "منتج رائع تستحق مشاركته"}
                   />
-                   <button
+                  <button
                     type="button"
                     onClick={() => HandleTowishlist(product.product_id)}
                     className="p-2 cursor-pointer rounded-full border border-slate-200 hover:border-rose-400 hover:bg-rose-50 transition-colors"
@@ -286,15 +307,22 @@ export default function ProductDetailsPage() {
                   {/* Wishlist Icon */}
                   <button
                     type="button"
+                    disabled={wishLoading}
                     onClick={() => HandleTowishlist(product.product_id)}
-                    className="p-2 rounded-full border border-slate-200 hover:border-rose-400 hover:bg-rose-50 transition-colors"
+                    className={`p-2 rounded-full border border-slate-200 hover:border-rose-400 hover:bg-rose-50 transition-colors ${
+                      wishLoading ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                     aria-label="إضافة للمفضلة"
                   >
-                    <Heart
-                      className={`w-5 h-5 ${
-                        isFavourite ? "fill-rose-500 text-rose-500" : ""
-                      }`}
-                    />
+                    {wishLoading ? (
+                      <Spinner className="w-4 h-4 text-rose-500" />
+                    ) : (
+                      <Heart
+                        className={`w-5 h-5 ${
+                          isFavourite ? "fill-rose-500 text-rose-500" : ""
+                        }`}
+                      />
+                    )}
                   </button>
                 </div>
 
@@ -379,30 +407,39 @@ export default function ProductDetailsPage() {
                 )}
 
                 {/* 💳 التقسيط */}
-                {mainInstallment && (
-                  <div className="rounded-2xl border border-blue-100 bg-blue-50/60 px-3 py-3 flex items-start gap-3 text-xs sm:text-sm">
-                    <div className="mt-0.5">
-                      <CreditCard className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold text-blue-900">
-                        متاح بالتقسيط مع Laserjet
-                      </p>
-                      <p className="text-blue-900/80">
-                        إجمالي السعر بعد التقسيط:{" "}
-                        <span className="font-bold">
-                          {formatPrice(mainInstallment.full_price)}
-                        </span>
-                      </p>
-                      {mainInstallment.installment_gain > 0 && (
-                        <p className="text-blue-900/70">
-                          مصاريف إضافية:{" "}
-                          {formatPrice(mainInstallment.installment_gain)}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:lg:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {uniqueInstallments.map((mainInstallment) => (
+                    <div
+                      key={mainInstallment.category_installment_id}
+                      className="rounded-2xl border border-blue-100 bg-blue-50/60 px-3 py-3 flex items-start gap-3 text-xs sm:text-sm"
+                    >
+                      <div className="mt-0.5">
+                        <CreditCard className="w-5 h-5 text-blue-600" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="font-semibold text-blue-900">
+                          {mainInstallment.installment_title} — متاح بالتقسيط مع
+                          Laserjet
                         </p>
-                      )}
+
+                        <p className="text-blue-900/80">
+                          إجمالي السعر بعد التقسيط:{" "}
+                          <span className="font-bold">
+                            {formatPrice(mainInstallment.full_price)}
+                          </span>
+                        </p>
+
+                        {mainInstallment.installment_gain > 0 && (
+                          <p className="text-blue-900/70">
+                            مصاريف إضافية:{" "}
+                            {formatPrice(mainInstallment.installment_gain)}%
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
 
                 {/* 🛒 الأزرار */}
                 <div className="flex flex-wrap items-center gap-3 mt-2">
@@ -418,16 +455,20 @@ export default function ProductDetailsPage() {
                     onClick={() => HandleTowishlist(product.product_id)}
                     className=" w-full md:w-auto cursor-pointer inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-rose-400 hover:bg-rose-50 transition-colors"
                   >
-                    <Heart
-                      className={`w-4 h-4 ${
-                        isFavourite ? "fill-rose-500 text-rose-500" : ""
-                      }`}
-                    />
+                    {wishLoading ? (
+                      <Spinner className="w-4 h-4 text-rose-500" />
+                    ) : (
+                      <Heart
+                        className={`w-4 h-4 ${
+                          isFavourite ? "fill-rose-500 text-rose-500" : ""
+                        }`}
+                      />
+                    )}
                     {isFavourite ? "في المفضلة" : "أضف للمفضلة"}
                   </button>
                   <div className="w-full md:w-auto">
                     <ShareDropdown
-                    buttonTitle={"مشاركة"}
+                      buttonTitle={"مشاركة"}
                       url={
                         typeof window !== "undefined"
                           ? window.location.href

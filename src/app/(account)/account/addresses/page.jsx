@@ -142,7 +142,7 @@ export default function AddressListApp() {
 
   return (
     <main
-      className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100"
+      className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-slate-100"
       dir="rtl"
     >
       <div className="mx-auto max-w-6xl px-4 py-8 lg:py-10 space-y-6 lg:space-y-8">

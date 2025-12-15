@@ -248,3 +248,18 @@ body {
 }
 
 
+/* Sonner toast accent bar */
+[data-sonner-toast] {
+  position: relative;
+}
+[data-sonner-toast]::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: rgba(148, 163, 184, 0.7);
+}
+[data-sonner-toast][data-type="success"]::before { background: rgba(16,185,129,0.9); }
+[data-sonner-toast][data-type="error"]::before { background: rgba(244,63,94,0.9); }
+[data-sonner-toast][data-type="warning"]::before { background: rgba(245,158,11,0.9); }
+[data-sonner-toast][data-type="info"]::before { background: rgba(59,130,246,0.9); }

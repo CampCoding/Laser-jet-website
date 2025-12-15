@@ -43,7 +43,7 @@ const formSchema = z
   });
 
 export default function RegisterPage() {
-  const { setValue } = useContext(MyContext);
+  const { setValue  , setPhone} = useContext(MyContext);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -83,6 +83,7 @@ export default function RegisterPage() {
 
       if (data?.success) {
         setValue("تم جلب بياناتك بنجاح");
+        setPhone(values.phone);
         router.push("/register/otp");
       } else {
         toast.error(data?.message || "حدث خطأ غير متوقع");
@@ -152,6 +153,7 @@ export default function RegisterPage() {
                 >
                   {/* الاسم */}
                   <FormField
+                    
                     control={form.control}
                     name="username"
                     render={({ field }) => (

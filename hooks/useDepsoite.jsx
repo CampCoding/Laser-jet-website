@@ -15,6 +15,8 @@ export function useDeposit({ onSuccess, onError } = {}) {
       setError(null);
 
       try {
+
+
         const token = await GetMytoken();
 
         const res = await fetch(
@@ -22,6 +24,7 @@ export function useDeposit({ onSuccess, onError } = {}) {
           {
             method: "POST",
             headers: {
+              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(payload),

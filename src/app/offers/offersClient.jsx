@@ -1,4 +1,3 @@
-
 import Image from "next/image";
 import {
   Tag,
@@ -9,21 +8,12 @@ import {
   Heart,
   BadgePercent,
 } from "lucide-react";
+import ProductCard from "../_commponent/Card/ProductCard";
 
-
-
-
-export default function OffersClient({ offers = []   }) {
-
-
-
-
-
-
-
+export default function OffersClient({ offers = [] }) {
   return (
     <section className="py-8 md:py-12" dir="rtl">
-      <div className="mx-auto max-w-6xl px-4">
+      <div className="mx-auto container  px-4 md:px-10">
         {/* العنوان الرئيسي */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -67,34 +57,28 @@ function OfferCard({ offer, products }) {
       {/* هيدر العرض */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-gradient-to-l from-blue-50/80 via-indigo-50/70 to-sky-50/70 px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-full bg-gray-900 px-3 py-1 text-xs font-semibold text-white">
-            <BadgePercent className="h-3 w-3" />
-            عرض رقم #{offer.offer_id}
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white">
+            عرض خاص
           </span>
           <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-blue-700">
-            <Percent className="h-3 w-3" />
             خصم حتى {offer.offer_value}%
           </span>
           <span
             className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold ${statusClass}`}
           >
-            <Zap className="h-3 w-3" />
             {statusLabel}
           </span>
         </div>
 
         <div className="text-left text-[11px] text-gray-700 md:text-xs">
-          <div className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            <span>من: {formatDateTime(offer.start_date)}</span>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] md:text-[11px]">
-            <span>حتى: {formatDateTime(offer.end_date)}</span>
+          <div>من: {formatDateTime(offer.start_date)}</div>
+          <div className="text-[10px] md:text-[11px]">
+            حتى: {formatDateTime(offer.end_date)}
           </div>
         </div>
       </div>
 
-      {/* المنتجات داخل العرض */}
+      {/* المنتجات */}
       <div className="p-4 md:p-5">
         <div className="mb-3 flex items-center justify-between text-xs text-gray-500">
           <span>عدد المنتجات في العرض: {products.length}</span>
@@ -103,14 +87,28 @@ function OfferCard({ offer, products }) {
           </span>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
-            <OfferProductCard
-              key={product.product_id}
-              product={product}
-              offer={offer}
-            />
-          ))}
+        <div 
+            className="grid grid-cols-2 gap-2 md:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+            >
+          {products.map((p) => {
+            // ✅ نجهز المنتج علشان ProductCard يفهم إن فيه عرض
+            const normalizedProduct = {
+              ...p,
+              product_title: p.title, // لو ProductCard بيستخدم product_title
+              offer: {
+                sell_value: p.offer_sell_value, // ده سعر العرض
+                value: p.offer_value, // optional
+              },
+            };
+
+            return (
+              <ProductCard
+                key={p.product_id}
+                product={normalizedProduct}
+                onWishlistChange={() => {}}
+              />
+            );
+          })}
         </div>
       </div>
     </article>
@@ -132,7 +130,7 @@ function OfferProductCard({ product, offer }) {
   const isActive = product.is_active === 1;
 
   return (
-    <div  className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-gray-50/60 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-gray-50/60 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
       {/* صورة المنتج */}
       <div className="relative h-40 w-full overflow-hidden bg-white">
         {product.images?.[0]?.image_url ? (

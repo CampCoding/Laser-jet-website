@@ -364,13 +364,14 @@ export default function Footer() {
           </ul>
           <div className="flex gap-4 mt-4">
             {footerData.socialMedia.map((icon) => (
-              <Link
+              <a
                 key={icon.id}
                 href={icon.link}
+                target="_blank"
                 className="p-2 bg-white w-[40px] text-green-200 rounded-full shadow hover:scale-110 transition"
               >
                 {iconMapping[icon.icon]}
-              </Link>
+              </a>
             ))}
           </div>
         </div>

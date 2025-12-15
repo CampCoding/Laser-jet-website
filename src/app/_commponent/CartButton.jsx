@@ -80,9 +80,9 @@ export default function AddToCartButton({ product, inCart: inCartProp }) {
 
         toast.success("تم إضافة المنتج للكارت بنجاح", {
           duration: 4000,
-          position: "top-right",
+          position: "top",
         });
-       
+
         refreshCart();
 
         if (
@@ -123,11 +123,15 @@ export default function AddToCartButton({ product, inCart: inCartProp }) {
       console.log("AddToCart response (+):", data);
 
       if (data.success) {
-        setInCart(true);
-
         // ✅ تحديث السلة في الـ Redux
         refreshCart();
+        if (data.message == "تم تحديث المنتج بنجاح") {
+          setInCart(true);
+          setQty((prev) => prev + 1);
+        toast.success("تم اضافة المنتج للسلة بنجاح");
 
+          return;
+        }
         if (
           data?.message ===
           "لا يمكن إضافة المزيد من العناصر - تم الوصول للحد الأقصى للمخزون"
@@ -169,12 +173,12 @@ export default function AddToCartButton({ product, inCart: inCartProp }) {
         setInCart(false);
         toast.success("تم حذف المنتج من الكارت بنجاح", {
           duration: 4000,
-          position: "top-right",
+          position: "top",
         });
       } else {
         toast.success("تم تقليل الكمية بنجاح", {
           duration: 4000,
-          position: "top-right",
+          position: "top",
         });
       }
     } catch (err) {
@@ -189,14 +193,14 @@ export default function AddToCartButton({ product, inCart: inCartProp }) {
 
   return (
     <div className="flex w-full items-center justify-between gap-2">
-      {/* زر أضف إلى الكارت */}
+      {/* زر أضف إلى السلة */}
       {!showCounter && (
         <Button
           onClick={handleFirstAdd}
           disabled={loading}
           className="w-full cursor-pointer! rounded-٢xl bg-gradient-to-r from-green-600 to-green-700 px-4 py-2 text-sm font-semibold text-white transition-all hover:scale-105 hover:from-green-600 hover:to-green-800"
         >
-          {loading ? "جاري الإضافة..." : "أضف إلى الكارت"}
+          {loading ? "جاري الإضافة..." : "أضف إلى السلة"}
         </Button>
       )}
 

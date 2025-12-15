@@ -133,13 +133,17 @@ export default function DesktopSearch() {
             }}
           />
 
-          <button
+          <Link
+            href={{
+              pathname: "/products",
+              query: { keywords: query.trim() },
+            }}
             type="submit"
-            className="cursor-pointer flex items-center gap-1 rounded-md bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
+            className="cursor-pointer flex items-center gap-1 rounded-md bg-blue-600! px-3 py-2 text-sm text-white! hover:bg-blue-700!"
           >
             <Search size={16} />
             ابحث
-          </button>
+          </Link>
         </form>
 
         {/* Dropdown results */}

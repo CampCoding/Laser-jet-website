@@ -46,12 +46,9 @@ export default function CategoriesSwiper() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50 py-12 md:py-16">
+    <section className="relative overflow-hidden bg-linear-to-b from-slate-50 via-white to-slate-50 py-12 md:py-16">
       {/* خلفية ديكورية ناعمة */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-32 -top-24 h-64 w-64 rounded-full bg-blue-100/60 blur-3xl" />
-        <div className="absolute -left-20 bottom-0 h-56 w-56 rounded-full bg-sky-100/70 blur-3xl" />
-      </div>
+     
 
       <Container className="relative z-10 mx-auto">
         {/* هيدر السكشن */}
@@ -66,7 +63,7 @@ export default function CategoriesSwiper() {
               اكتشف منتجاتك حسب الفئة
             </div>
 
-            <h2 className="bg-gradient-to-r from-blue-700 via-sky-500 to-blue-700 bg-clip-text text-2xl font-extrabold tracking-wide text-transparent sm:text-3xl md:text-4xl">
+            <h2 className="bg-linear-to-r from-blue-700 via-sky-500 to-blue-700 bg-clip-text text-2xl font-extrabold tracking-wide text-transparent sm:text-3xl md:text-4xl">
               تسوّق من أفضل الفئات لدينا
             </h2>
 
@@ -123,17 +120,30 @@ export default function CategoriesSwiper() {
 
         {/* حالة التحميل – Skeleton */}
         {loading && (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex flex-col items-center gap-3 animate-pulse"
-              >
-                <div className="h-[110px] w-full rounded-3xl bg-slate-200/70 sm:h-[130px] md:h-[140px]" />
-                <div className="h-3 w-20 rounded-full bg-slate-200/80" />
-              </div>
-            ))}
-          </div>
+            <Swiper
+              modules={[Navigation]}
+              onSwiper={(swiper) => {
+                swiperRef.current = swiper;
+              }}
+              spaceBetween={18}
+              slidesPerView={2}
+              breakpoints={{
+                480: { slidesPerView: 3, spaceBetween: 18 },
+                768: { slidesPerView: 4, spaceBetween: 20 },
+                1024: { slidesPerView: 6, spaceBetween: 22 },
+                1280: { slidesPerView: 8, spaceBetween: 24 },
+              }}
+              className="w-full"
+            >
+              {Array.from({ length: 15 }).map((_, index) => (
+                <SwiperSlide key={index}>
+                  <div className="flex flex-col items-center gap-3 animate-pulse">
+                    <div className="h-[110px] w-full rounded-3xl bg-slate-200/70 sm:h-[130px] md:h-[140px]" />
+                    <div className="h-3 w-20 rounded-full bg-slate-200/80" />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
         )}
 
         {/* لو مفيش داتا */}
@@ -166,8 +176,8 @@ export default function CategoriesSwiper() {
               <SwiperSlide key={cat.id || `${cat.category_id}-${index}`}>
                 <Link
                   href={{
-                    pathname: `/spasicfic-Catg/${cat?.category_id}`,
-                    query: { name: cat?.category_title },
+                    pathname: `/products`,
+                    query: { category_id: cat?.category_id },
                   }}
                 >
                   <div
@@ -178,7 +188,7 @@ export default function CategoriesSwiper() {
                     {/* إطار خارجي جريتنت + Glass effect */}
                     <div className="relative w-full">
                       {/* هالة جريتنت عند الهوفر */}
-                      <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/15 via-sky-400/15 to-blue-700/15 opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100" />
+                      <div className="pointer-events-none absolute inset-0 rounded-3xl bg-linear-to-br from-blue-500/15 via-sky-400/15 to-blue-700/15 opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100" />
 
                       {/* الكرت */}
                       <div className="relative mb-3 h-[120px] w-full overflow-hidden rounded-3xl bg-white/90 shadow-sm ring-1 ring-slate-100 backdrop-blur-sm transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-xl group-hover:ring-blue-100 sm:h-[130px] md:h-[145px]">

@@ -6,14 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -21,8 +14,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { MyContext } from "@/providers/OtpContext";
 import Image from "next/image";
+import axios from "axios"; // ✅ add
 
-// ✅ Schema for OTP validation
 const formSchema = z.object({
   otp: z
     .string()
@@ -32,22 +25,23 @@ const formSchema = z.object({
 });
 
 export default function OtpVerificationPage() {
-  const { value } = useContext(MyContext);
-  const { data: session, status } = useSession();
+  // ✅ افترض إن الـ context فيه phone كمان
+  // مثال: { value, phone } أو { value, userPhone }
+  const { value, phone } = useContext(MyContext);
+
+  const { status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // ⛔ حماية الصفحة بالـ Context value
   useEffect(() => {
     if (value !== "تم جلب بياناتك بنجاح") {
       router.replace("/register");
     }
   }, [value, router]);
 
-  // ⛔ حماية الصفحة بالـ session
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/"); // لو مسجل دخول، يروح على الهوم
+      router.replace("/");
     }
   }, [status, router]);
 
@@ -59,8 +53,51 @@ export default function OtpVerificationPage() {
   const onSubmit = async (values) => {
     setLoading(true);
     try {
-      console.log("OTP:", values.otp);
-      // هنا تحط API للتحقق من OTP
+      const otpNumber = Number(values.otp);
+
+      if (!phone) {
+        // لو مش موجود في الكونتكست
+        form.setError("otp", { type: "manual", message: "رقم الهاتف غير متوفر. ارجع لصفحة التسجيل." });
+        return;
+      }
+
+      const url = `https://lesarjet.camp-coding.site/api/user/verify_code?phone=${encodeURIComponent(
+        phone
+      )}`;
+
+      const res = await axios.put(
+        url,
+        { code: otpNumber },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      // ✅ عدّل الشرط حسب شكل الـ response الحقيقي عندك
+      // مثال شائع: res.data.status === true أو res.data.success === 1
+      const ok =
+        res?.data?.status === true ||
+        res?.data?.success === true ||
+        res?.data?.success === 1;
+
+      if (ok) {
+        // لو عندك خطوة بعدها (مثلاً login أو redirect)
+        router.replace("/login"); // أو "/"
+      } else {
+        const msg =
+          res?.data?.message ||
+          "كود التفعيل غير صحيح. حاول مرة أخرى.";
+        form.setError("otp", { type: "manual", message: msg });
+      }
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "حدث خطأ أثناء التحقق من الكود.";
+      form.setError("otp", { type: "manual", message: msg });
     } finally {
       setLoading(false);
     }
@@ -76,10 +113,10 @@ export default function OtpVerificationPage() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gradient-to-t md:bg-gradient-to-r from-blue-600 to-gray-50 px-4 md:px-16 gap-8">
-  <div className="hidden md:flex relative w-1/3 h-[250px] items-center justify-center">
+      <div className="hidden md:flex relative w-1/3 h-[250px] items-center justify-center">
         <Image src="/logo.png" alt="Logo" fill className="object-contain" />
       </div>
-      {/* الفورم على الشمال */}
+
       <div className="w-full md:w-2/3 max-w-2xl shadow-md border bg-white rounded-2xl z-10">
         <Card>
           <CardHeader className="text-center my-3">
@@ -90,7 +127,6 @@ export default function OtpVerificationPage() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 text-right">
-                {/* OTP */}
                 <FormField
                   control={form.control}
                   name="otp"
@@ -113,15 +149,22 @@ export default function OtpVerificationPage() {
                   )}
                 />
 
-                {/* إعادة ارسال */}
                 <div className="flex flex-col items-center gap-1 text-xs text-gray-500">
                   <p>لم يصلك الكود بعد؟</p>
-                  <button type="button" className="text-blue-600 hover:underline" onClick={() => console.log("Resend OTP")}>
+                  <button
+                    type="button"
+                    className="text-blue-600 hover:underline"
+                    onClick={() => console.log("Resend OTP")}
+                  >
                     إعادة إرسال الكود
                   </button>
                 </div>
 
-                <Button type="submit" disabled={loading} className="w-full cursor-pointer rounded-3xl mt-4 bg-blue-600 text-white hover:bg-blue-700 my-3">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full cursor-pointer rounded-3xl mt-4 bg-blue-600 text-white hover:bg-blue-700 my-3"
+                >
                   {loading ? "جارٍ التحقق..." : "تأكيد الكود"}
                 </Button>
               </form>
@@ -129,12 +172,6 @@ export default function OtpVerificationPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* الصورة على اليمين */}
-    
-
     </div>
   );
 }
-
-

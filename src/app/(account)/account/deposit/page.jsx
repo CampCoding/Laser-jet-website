@@ -34,8 +34,12 @@ function DepositInput() {
   } = form;
 
   // استخدام الهوك مع callbacks
-  const { deposit, isLoading } = useDeposit({
-    onSuccess: () => {
+  const { deposit, isLoading  } = useDeposit({
+    onSuccess: (res) => {
+      console.log("response" ,res)
+      if (res?.data.status === "success" && res?.data?.data.url) {
+        window.location.href = res.data.data.url;
+      }
       setSubmitSuccess("تم تنفيذ عملية الإيداع بنجاح ✅");
       setSubmitError(null);
       reset({ depositAmount: "" });

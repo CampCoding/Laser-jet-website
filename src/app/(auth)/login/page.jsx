@@ -77,19 +77,24 @@ export default function LoginPage() {
     const res = await signIn("credentials", {
       phone: values.phone,
       password: values.password,
+      redirect: false,          // ✅ مهم جدًا (يمنع الـ reload/redirect)
       callbackUrl: redirect || "/",
     });
 
     setLoading(false);
 
-    if (res?.error) {
-      setErrorMsg("رقم الهاتف أو كلمة المرور غير صحيحة");
+    if (!res) {
+      setErrorMsg("حدث خطأ غير متوقع");
       return;
     }
-
-    if (res?.ok) {
-      router.push("/");
+  
+    if (res.error) {
+      setErrorMsg("رقم الهاتف أو كلمة المرور غير صحيحة");
+      return;                   // ✅ مفيش أي redirect هنا
     }
+  
+    // ✅ نجاح: روح للـ url اللي رجعه NextAuth أو للهوم
+    router.push(res.url || "/");
   };
 
   // =====================

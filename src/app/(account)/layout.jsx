@@ -119,7 +119,7 @@ const AccountLayout = ({ children }) => {
 
       {/* 📱 Drawer للـ Sidebar في الموبايل فقط */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-9999999999! lg:hidden">
           {/* Overlay */}
           <div
             className="absolute inset-0 bg-black/40"
@@ -127,7 +127,7 @@ const AccountLayout = ({ children }) => {
           />
 
           {/* Drawer panel */}
-          <div className="absolute inset-y-0 right-0 flex h-full w-72 max-w-[85%] flex-col bg-white shadow-2xl transition-transform duration-300 translate-x-0">
+          <div className="absolute  z-9999999999! inset-y-0 right-0 flex h-full w-72 max-w-[85%] flex-col bg-white shadow-2xl transition-transform duration-300 translate-x-0">
             <div className="border-b px-4 py-3 flex items-center justify-between">
               <span className="text-sm font-semibold text-slate-800">
                 حسابي
@@ -140,7 +140,7 @@ const AccountLayout = ({ children }) => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3">
+            <div className="flex-1 overflow-y-auto p-3 relative! z-99999999999999!">
               {/* نمرر onNavigate عشان اللينكات جوه الـ Sidebar تقفل الدروار */}
               <AccountSidebar onNavigate={() => setSidebarOpen(false)} />
             </div>

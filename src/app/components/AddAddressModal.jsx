@@ -8,37 +8,6 @@ import useGetDeliveryAreas from "../../../hooks/useGerDeliveryAreas";
 // dynamic import للخريطة (client-only)
 const MapSelector = dynamic(() => import("./MapSelector"), { ssr: false });
 
-// بيانات المحافظات + إحداثيات تقريبية
-export const governoratesData = [
-  { id: 1, name: "القاهرة", lat: 30.0444, lng: 31.2357 },
-  { id: 2, name: "الجيزة", lat: 29.987, lng: 31.2118 },
-  { id: 3, name: "الإسكندرية", lat: 31.2001, lng: 29.9187 },
-  { id: 4, name: "الدقهلية", lat: 31.0409, lng: 31.3785 },
-  { id: 5, name: "الشرقية", lat: 30.732, lng: 31.7147 },
-  { id: 6, name: "الغربية", lat: 30.8754, lng: 31.0335 },
-  { id: 7, name: "القليوبية", lat: 30.4206, lng: 31.192 },
-  { id: 8, name: "المنوفية", lat: 30.5972, lng: 30.9876 },
-  { id: 9, name: "البحيرة", lat: 30.848, lng: 30.3436 },
-  { id: 10, name: "كفر الشيخ", lat: 31.1107, lng: 30.9401 },
-  { id: 11, name: "الفيوم", lat: 29.3084, lng: 30.8428 },
-  { id: 12, name: "بني سويف", lat: 29.0661, lng: 31.0994 },
-  { id: 13, name: "المنيا", lat: 28.0934, lng: 30.7618 },
-  { id: 14, name: "أسيوط", lat: 27.1828, lng: 31.182 },
-  { id: 15, name: "سوهاج", lat: 26.554, lng: 31.6948 },
-  { id: 16, name: "قنا", lat: 26.1551, lng: 32.716 },
-  { id: 17, name: "الأقصر", lat: 25.6872, lng: 32.6396 },
-  { id: 18, name: "أسوان", lat: 24.0889, lng: 32.8998 },
-  { id: 19, name: "الوادي الجديد", lat: 25.592, lng: 28.8966 },
-  { id: 20, name: "البحر الأحمر", lat: 27.2579, lng: 33.8116 },
-  { id: 21, name: "مرسى مطروح", lat: 31.3543, lng: 27.2373 },
-  { id: 22, name: "الإسماعيلية", lat: 30.5965, lng: 32.2715 },
-  { id: 23, name: "السويس", lat: 29.9668, lng: 32.5498 },
-  { id: 24, name: "بورسعيد", lat: 31.2565, lng: 32.2841 },
-  { id: 25, name: "دمياط", lat: 31.4165, lng: 31.8133 },
-  { id: 26, name: "شمال سيناء", lat: 31.132, lng: 33.7984 },
-  { id: 27, name: "جنوب سيناء", lat: 28.2416, lng: 34.215 },
-];
-
 export default function AddAddressModal({
   isModalOpen,
   setIsModalOpen,

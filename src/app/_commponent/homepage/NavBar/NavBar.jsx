@@ -84,7 +84,7 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10);
+    const handleScroll = () => setScrolled(window.scrollY > 200);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -108,7 +108,7 @@ export default function Navbar() {
       }`}
     >
       {/* 🔵 Top blue strip */}
-     {!scrolled &&
+     {true &&
        <div className="w-full bg-[#0648af] text-white">
        <div className="container mx-auto flex gap-2 px-4 py-2 md:flex-row justify-between">
          {/* Left: Offers + WhatsApp */}
@@ -126,8 +126,9 @@ export default function Navbar() {
            <div className="flex items-center gap-2 md:border-r md:border-white/40 md:pr-4">
              <span className="text-[11px] md:text-sm">تواصل معنا على:</span>
              <Link
-               href="#"
-               className="rounded-full bg-white p-2 shadow transition hover:scale-110"
+               href="https://api.whatsapp.com/send/?phone=%2B201004331113&text&type=phone_number&app_absent=0"
+               target="_blank"
+               className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
              >
                <Whatsapp />
              </Link>
@@ -149,23 +150,26 @@ export default function Navbar() {
            <div className="flex items-center gap-2 md:border-r md:border-white/40 md:pr-4">
              <span className="text-[11px] md:text-sm">تابعنا على:</span>
              <Link
-               href="#"
-               className="rounded-full bg-white p-2 shadow transition hover:scale-110"
+               href="https://www.facebook.com/laserjet.com.eg"
+               target="_blank"
+               className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
              >
                <Facebook className="h-4 w-4 text-blue-700" />
              </Link>
              <Link
-               href="#"
-               className="rounded-full bg-white p-2 shadow transition hover:scale-110"
+               href="https://www.instagram.com/laserjet.com.eg/"
+               target="_blank"
+               className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
              >
                <Instagram className="h-4 w-4 text-pink-600" />
              </Link>
-             <Link
-               href="#"
-               className="rounded-full bg-white p-2 shadow transition hover:scale-110"
+             <a
+               href="https://www.youtube.com/@laserjet2458"
+               target="_blank"
+               className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
              >
                <Youtube className="h-4 w-4 text-red-600" />
-             </Link>
+             </a>
            </div>
          </div>
        </div>

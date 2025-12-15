@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import AddToWishList from "../../../CartAction/AddToWishList";
 import { toast } from "sonner";
 
-export default function ProductCard({ product , onWishlistChange = ()=>{} }) {
+export default function ProductCard({ product, onWishlistChange = () => {} }) {
   const [inFav, setInFav] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
 
@@ -34,7 +34,7 @@ export default function ProductCard({ product , onWishlistChange = ()=>{} }) {
       const data = await AddToWishList(product?.product_id);
 
       if (data?.success) {
-        toast.success(data.message, {
+        toast.success("تم إضافة المنتج للمفضلة بنجاح", {
           duration: 5000,
           position: "top-center",
         });
@@ -55,7 +55,7 @@ export default function ProductCard({ product , onWishlistChange = ()=>{} }) {
   const mainImage = product?.images?.[0]?.image_url || null;
 
   // 🔹 بيانات العرض
-  const priceNumber = Number(product?.price) || 0;
+  const priceNumber = Number(product?.sell_price) || 0;
   const offerData = product?.offer || null;
 
   const hasOffer =
@@ -72,7 +72,11 @@ export default function ProductCard({ product , onWishlistChange = ()=>{} }) {
       : null;
 
   // 🔹 حالة السلة (تمريرها للزر)
-  const inCart = product?.isInCart === 1 || product?.isInCart === true;
+  const inCart =
+    product?.isInCart === 1 ||
+    product?.isInCart === true ||
+    product?.in_cart == 1 ||
+    product?.in_cart == true;
 
   return (
     <Card
@@ -110,7 +114,6 @@ export default function ProductCard({ product , onWishlistChange = ()=>{} }) {
       <Link
         href={{
           pathname: `/spasific-product/${product.product_id}`,
-          query: { data: JSON.stringify(product) },
         }}
         className="flex-1"
       >

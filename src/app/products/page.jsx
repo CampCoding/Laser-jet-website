@@ -46,6 +46,155 @@ const SORT_OPTIONS = [
   { value: "sold_quantity_desc", label: "الأكثر مبيعًا" },
 ];
 
+// ✅ Component الفلاتر (مستقل عن ProductsPage عشان ما يفقدش الـ focus)
+function FiltersContent({
+  keyword,
+  setKeyword,
+  debouncedUpdateKeyword,
+  categories,
+  categoriesLoading,
+  categoriesError,
+  selectedCategory,
+  handleCategoryChange,
+  priceRange,
+  handlePriceRangeChange,
+  minSold,
+  setMinSold,
+  maxSold,
+  setMaxSold,
+  updateFiltersInUrl,
+  sortValue,
+  handleSortChange,
+}) {
+  return (
+    <>
+      {/* Keyword */}
+      <div className="mb-3">
+        <label className="block text-xs text-slate-500 mb-1">
+          البحث بالكلمة
+        </label>
+        <input
+          type="text"
+          value={keyword}
+          onChange={(e) => {
+            const v = e.target.value;
+            setKeyword(v); // تحديث الـ UI فوراً
+            debouncedUpdateKeyword(v); // تحديث الـ URL / البحث بعد التوقف
+          }}
+          className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          placeholder="مثال: تليفزيون 55 بوصة"
+        />
+      </div>
+
+      {/* Categories as radio buttons */}
+      <div className="mb-3">
+        <p className="block text-xs text-slate-500 mb-1">الفئات</p>
+
+        {categoriesLoading && (
+          <div className="text-xs text-slate-400">جاري تحميل الفئات...</div>
+        )}
+
+        {categoriesError && (
+          <div className="text-[11px] text-red-500">تعذر تحميل الفئات</div>
+        )}
+
+        {!categoriesLoading && categories?.length > 0 && (
+          <div className="max-h-48 overflow-auto space-y-1">
+            {/* خيار الكل */}
+            <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input
+                type="radio"
+                name="category"
+                value=""
+                checked={!selectedCategory}
+                onChange={() => handleCategoryChange(null)}
+                className="text-blue-600 focus:ring-blue-500"
+              />
+              <span>الكل</span>
+            </label>
+
+            {categories.map((cat) => (
+              <label
+                key={cat.category_id}
+                className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  name="category"
+                  value={cat.category_id}
+                  checked={selectedCategory === String(cat.category_id)}
+                  onChange={() => handleCategoryChange(cat.category_id)}
+                  className="text-blue-600 focus:ring-blue-500"
+                />
+                <span>{cat.title}</span>
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Price Range Slider (with debounce) */}
+      <div className="mb-4">
+        <FieldSlider
+          value={priceRange}
+          onValueChange={handlePriceRangeChange}
+          min={0}
+          max={100000}
+          step={100}
+        />
+      </div>
+
+      {/* Sold Range */}
+      <div className="mb-3">
+        <label className="block text-xs text-slate-500 mb-1">
+          عدد القطع المباعة
+        </label>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            value={minSold}
+            onChange={(e) => {
+              const v = e.target.value;
+              setMinSold(v);
+              updateFiltersInUrl({ min_sold: v });
+            }}
+            className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            placeholder="من"
+          />
+          <span className="text-xs text-slate-400">-</span>
+          <input
+            type="number"
+            value={maxSold}
+            onChange={(e) => {
+              const v = e.target.value;
+              setMaxSold(v);
+              updateFiltersInUrl({ max_sold: v });
+            }}
+            className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            placeholder="إلى"
+          />
+        </div>
+      </div>
+
+      {/* Sorting */}
+      <div className="mb-1">
+        <label className="block text-xs text-slate-500 mb-1">ترتيب حسب</label>
+        <select
+          value={sortValue}
+          onChange={handleSortChange}
+          className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+        >
+          {SORT_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </>
+  );
+}
+
 export default function ProductsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -204,6 +353,14 @@ export default function ProductsPage() {
     400 // ms
   );
 
+  // ✅ debounce للبحث بالكلمة
+  const debouncedUpdateKeyword = useDebouncedCallback(
+    (value) => {
+      updateFiltersInUrl({ keywords: value });
+    },
+    400 // ms
+  );
+
   // ⏫ sync بين الـ URL وبين الفورم لما الـ URL يتغيّر (back/forward مثلاً)
   useEffect(() => {
     setKeyword(searchParams.get("keywords") || "");
@@ -257,165 +414,6 @@ export default function ProductsPage() {
   const loading = productsLoading;
   const error = productsError || categoriesError;
 
-  // ✅ محتوى الفلاتر كـ Component داخلي عشان نعيد استخدامه في الـ Sidebar والـ Drawer
-  const FiltersContent = () => (
-    <>
-      {/* Keyword */}
-      <div className="mb-3">
-        <label className="block text-xs text-slate-500 mb-1">
-          البحث بالكلمة
-        </label>
-        <input
-          type="text"
-          value={keyword}
-          onChange={(e) => {
-            const v = e.target.value;
-            setKeyword(v);
-            updateFiltersInUrl({ keywords: v });
-          }}
-          className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-          placeholder="مثال: تليفزيون 55 بوصة"
-        />
-      </div>
-
-      {/* Categories as radio buttons */}
-      <div className="mb-3">
-        <p className="block text-xs text-slate-500 mb-1">التصنيفات</p>
-
-        {categoriesLoading && (
-          <div className="text-xs text-slate-400">جاري تحميل الفئات...</div>
-        )}
-
-        {categoriesError && (
-          <div className="text-[11px] text-red-500">تعذر تحميل الفئات</div>
-        )}
-
-        {!categoriesLoading && categories?.length > 0 && (
-          <div className="max-h-48 overflow-auto space-y-1">
-            {/* خيار الكل */}
-            <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
-              <input
-                type="radio"
-                name="category"
-                value=""
-                checked={!selectedCategory}
-                onChange={() => handleCategoryChange(null)}
-                className="text-blue-600 focus:ring-blue-500"
-              />
-              <span>الكل</span>
-            </label>
-
-            {categories.map((cat) => (
-              <label
-                key={cat.category_id}
-                className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  name="category"
-                  value={cat.category_id}
-                  checked={selectedCategory === String(cat.category_id)}
-                  onChange={() => handleCategoryChange(cat.category_id)}
-                  className="text-blue-600 focus:ring-blue-500"
-                />
-                <span>{cat.title}</span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Price Range Slider (with debounce) */}
-      <div className="mb-4">
-        <FieldSlider
-          value={priceRange}
-          onValueChange={handlePriceRangeChange}
-          min={0}
-          max={100000}
-          step={100}
-        />
-      </div>
-
-      {/* Sold Range */}
-      <div className="mb-3">
-        <label className="block text-xs text-slate-500 mb-1">
-          عدد القطع المباعة
-        </label>
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            value={minSold}
-            onChange={(e) => {
-              const v = e.target.value;
-              setMinSold(v);
-              updateFiltersInUrl({ min_sold: v });
-            }}
-            className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-            placeholder="من"
-          />
-          <span className="text-xs text-slate-400">-</span>
-          <input
-            type="number"
-            value={maxSold}
-            onChange={(e) => {
-              const v = e.target.value;
-              setMaxSold(v);
-              updateFiltersInUrl({ max_sold: v });
-            }}
-            className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-            placeholder="إلى"
-          />
-        </div>
-      </div>
-
-      {/* Date Range */}
-      {/* <div className="mb-3">
-        <label className="block text-xs text-slate-500 mb-1">
-          تاريخ الإضافة
-        </label>
-        <div className="flex items-center gap-2">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => {
-              const v = e.target.value;
-              setDateFrom(v);
-              updateFiltersInUrl({ date_from: v });
-            }}
-            className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-          />
-          <span className="text-xs text-slate-400">-</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => {
-              const v = e.target.value;
-              setDateTo(v);
-              updateFiltersInUrl({ date_to: v });
-            }}
-            className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-          />
-        </div>
-      </div> */}
-
-      {/* Sorting */}
-      <div className="mb-1">
-        <label className="block text-xs text-slate-500 mb-1">ترتيب حسب</label>
-        <select
-          value={sortValue}
-          onChange={handleSortChange}
-          className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
-    </>
-  );
-
   return (
     <div className="container mx-auto px-4 md:px-10 py-6">
       <h1 className="text-xl md:text-2xl font-semibold mb-4 text-slate-800">
@@ -442,7 +440,7 @@ export default function ProductsPage() {
 
       {/* Drawer الفلاتر للموبايل */}
       {isMobileFiltersOpen && (
-        <div className="fixed inset-0 z-40 flex md:hidden">
+        <div className="fixed inset-0 z-[999999] flex md:hidden">
           {/* الخلفية الداكنة */}
           <div
             className="absolute inset-0 bg-black/40"
@@ -465,7 +463,25 @@ export default function ProductsPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto pr-1">
-              <FiltersContent />
+              <FiltersContent
+                keyword={keyword}
+                setKeyword={setKeyword}
+                debouncedUpdateKeyword={debouncedUpdateKeyword}
+                categories={categories}
+                categoriesLoading={categoriesLoading}
+                categoriesError={categoriesError}
+                selectedCategory={selectedCategory}
+                handleCategoryChange={handleCategoryChange}
+                priceRange={priceRange}
+                handlePriceRangeChange={handlePriceRangeChange}
+                minSold={minSold}
+                setMinSold={setMinSold}
+                maxSold={maxSold}
+                setMaxSold={setMaxSold}
+                updateFiltersInUrl={updateFiltersInUrl}
+                sortValue={sortValue}
+                handleSortChange={handleSortChange}
+              />
             </div>
           </div>
         </div>
@@ -565,7 +581,25 @@ export default function ProductsPage() {
           <h2 className="text-base font-semibold mb-3 text-slate-800">
             الفلترة و الفرز
           </h2>
-          <FiltersContent />
+          <FiltersContent
+            keyword={keyword}
+            setKeyword={setKeyword}
+            debouncedUpdateKeyword={debouncedUpdateKeyword}
+            categories={categories}
+            categoriesLoading={categoriesLoading}
+            categoriesError={categoriesError}
+            selectedCategory={selectedCategory}
+            handleCategoryChange={handleCategoryChange}
+            priceRange={priceRange}
+            handlePriceRangeChange={handlePriceRangeChange}
+            minSold={minSold}
+            setMinSold={setMinSold}
+            maxSold={maxSold}
+            setMaxSold={setMaxSold}
+            updateFiltersInUrl={updateFiltersInUrl}
+            sortValue={sortValue}
+            handleSortChange={handleSortChange}
+          />
         </aside>
       </div>
     </div>

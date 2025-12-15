@@ -66,17 +66,17 @@ export default function NewAddToCartButton({ product }) {
       if (data?.success) {
         const newQty = Math.max(qty - 1, 0);
         setQty(newQty);
-
+        dispatch(getCartThunk({ token: accessToken }));
         // لو الـ API قال المنتج اتحذف من الكارت
         if (data?.data?.message === "تم حذف المنتج بنجاح") {
           toast.success("تم حذف المنتج من الكارت بنجاح", {
             duration: 5000,
-            position: "top-right",
+            position: "top",
           });
         } else {
           toast.success("تم تقليل الكمية بنجاح", {
             duration: 3000,
-            position: "top-right",
+            position: "top",
           });
         }
       } else {
@@ -93,14 +93,20 @@ export default function NewAddToCartButton({ product }) {
   return (
     <div className="flex w-full items-center justify-between gap-2">
       {/* زرار - */}
+      {
+        loading && (
+          <div className=" flex items-center justify-center bg-white/50">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-dashed border-gray-900"></div>
+          </div>
+        )
+      }
       <button
-        onClick={handleDecrease}
+        onClick={loading ? null : handleDecrease}
         disabled={loading || qty <= 0}
         className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gray-300 text-lg font-bold hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
       >
         -
       </button>
-
       {/* الكمية */}
       <span className="w-8 text-center font-semibold">{qty}</span>
 
@@ -112,6 +118,7 @@ export default function NewAddToCartButton({ product }) {
       >
         +
       </button>
+      
     </div>
   );
 }

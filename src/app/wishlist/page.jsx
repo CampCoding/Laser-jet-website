@@ -32,6 +32,10 @@ export default function WishlistPage() {
   const [brandFilter, setBrandFilter] = useState("all");
   const [hasOfferOnly, setHasOfferOnly] = useState(false);
   const [sortBy, setSortBy] = useState("recommended"); // recommended | price-asc | price-desc | offer-first
+
+  // ✅ اخفاء فوري للكروت بدون refetch
+  const [hiddenIds, setHiddenIds] = useState(() => new Set());
+
   // 🌀 حالة التحميل
   if (loading) {
     return (
@@ -45,7 +49,7 @@ export default function WishlistPage() {
           </div>
         </header>
 
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 md:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
@@ -61,7 +65,7 @@ export default function WishlistPage() {
       </main>
     );
   }
-  console.log("loading", loading);
+
   // لو مش عامل لوجين
   if (!session) {
     return (
@@ -126,9 +130,14 @@ export default function WishlistPage() {
     return Array.from(setCat);
   }, [items]);
 
-  // تطبيق الفلترة + الترتيب
+  // تطبيق الفلترة + الترتيب + اخفاء محلي فوري
   const filteredItems = useMemo(() => {
     let result = [...items];
+
+    // ✅ اخفاء فوري للكروت اللي اتشالت من المفضلة (بدون refetch)
+    if (hiddenIds.size) {
+      result = result.filter((item) => !hiddenIds.has(item.product_id));
+    }
 
     if (search.trim()) {
       const q = search.trim().toLowerCase();
@@ -171,14 +180,15 @@ export default function WishlistPage() {
     }
 
     return result;
-  }, [items, search, categoryFilter, brandFilter, hasOfferOnly, sortBy]);
+  }, [items, hiddenIds, search, categoryFilter, brandFilter, hasOfferOnly, sortBy]);
 
-  // لما المستخدم يشيل منتج من المفضلة (من جوه ProductCard)
+  // ✅ لما المستخدم يشيل منتج من المفضلة: اخفاء فوري
   const handleRemove = (id) => {
-    // 🔹 مش هنلمس الـ hook نفسه، لكن نعمل refetch بعد شوية
-    // أو تقدر تعتمد على revalidate من API لو AddToWishList بيرجع الليست الجديدة
-    // هنا هنكتفي بـ refetch:
-    refetch();
+    setHiddenIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
   };
 
   return (
@@ -201,7 +211,6 @@ export default function WishlistPage() {
       {/* الفلاتر */}
       <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          {/* البحث */}
           <div className="flex-1">
             <label className="mb-1 block text-xs font-medium text-gray-600">
               البحث
@@ -220,8 +229,7 @@ export default function WishlistPage() {
             </div>
           </div>
 
-          {/* الترتيب */}
-          <div className="w-full md:w-56">
+          {/* <div className="w-full md:w-56">
             <label className="mb-1 block text-xs font-medium text-gray-600">
               ترتيب حسب
             </label>
@@ -237,11 +245,10 @@ export default function WishlistPage() {
                 { value: "offer-first", label: "الأولوية للمنتجات المخفّضة" },
               ]}
             />
-          </div>
+          </div> */}
         </div>
 
-        {/* باقي الفلاتر */}
-        <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-3 text-xs">
+        {/* <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-3 text-xs">
           <div className="flex items-center gap-2">
             <span className="text-gray-600">الفئة:</span>
             <Select
@@ -269,7 +276,7 @@ export default function WishlistPage() {
             />
             <span className="text-gray-700">منتجات عليها عروض فقط</span>
           </label>
-        </div>
+        </div> */}
       </section>
 
       {/* شبكة المنتجات */}
@@ -285,6 +292,7 @@ export default function WishlistPage() {
                 setBrandFilter("all");
                 setHasOfferOnly(false);
                 setSortBy("recommended");
+                setHiddenIds(new Set()); // ✅ رجّع المخفي
               }}
               className="mt-3 inline-flex items-center justify-center rounded-full bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
             >
@@ -292,9 +300,10 @@ export default function WishlistPage() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 md:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {filteredItems.map((item) => {
               const normalizedProduct = {
+                ...item,
                 product_id: item.product_id,
                 product_title: item.title,
                 product_description: item.description,
@@ -307,12 +316,16 @@ export default function WishlistPage() {
                 offer: item.offer,
                 installments: item.installments,
                 category: item.category,
+                cart_quantity: item.cart_quantity,
+                isInCart: item.in_cart,
+                isInWishlist: true,
               };
 
               return (
                 <ProductCard
                   key={item.product_id}
                   product={normalizedProduct}
+                  // ✅ اخفي الكارت فورًا بدون refetch
                   onWishlistChange={() => handleRemove(item.product_id)}
                 />
               );

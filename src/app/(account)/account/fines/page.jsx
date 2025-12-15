@@ -11,9 +11,9 @@ export default function FinePage() {
   console.log("transactionsdata", data);
 
 
-  if (status === "loading") return <div>جاري تحميل المعاملات...</div>;
+  if (status === "loading") return <div>جاري تحميل الغرامات...</div>;
   if (status === "failed") return <div>خطأ: {error}</div>;
-  if (!data || !data.data || !fines.length) return <div>لا توجد بيانات معاملات.</div>;
+  if (!data || !data.data || !fines?.length) return <div>لا توجد بيانات غرامات.</div>;
 
 
 
