@@ -31,7 +31,7 @@ export default function PanerPage() {
   };
 
   return (
-    <Container className="relative flex justify-center items-center py-10 bg-gradient-to-b from-gray-50 to-gray-100">
+    <Container className="relative flex justify-center items-center py-10 bg-linear-to-b from-gray-50 to-gray-100">
       <div className="  shadow-xl rounded-3xl overflow-hidden">
         <Swiper
           spaceBetween={30}
@@ -63,7 +63,7 @@ export default function PanerPage() {
           ))}
 
           {/* دائرة التقدم */}
-          <div
+          {/* <div
             className="absolute bottom-6 right-8 z-10 flex items-center justify-center"
             slot="container-end"
           >
@@ -97,7 +97,7 @@ export default function PanerPage() {
                 }}
               />
             </svg>
-          </div>
+          </div> */}
         </Swiper>
       </div>
     </Container>

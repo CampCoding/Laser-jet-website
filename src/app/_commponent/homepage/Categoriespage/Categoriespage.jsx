@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
+import { Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import Image from "next/image";
@@ -46,7 +46,7 @@ export default function CategoriesSwiper() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden bg-linear-to-b from-slate-50 via-white to-slate-50 py-12 md:py-16">
+    <section className="relative overflow-hidden bg-linear-to-b from-slate-50 via-white to-slate-50 py-6 md:py-16">
       {/* خلفية ديكورية ناعمة */}
      
 
@@ -158,11 +158,12 @@ export default function CategoriesSwiper() {
         {/* Swiper الحقيقي */}
         {!loading && data.length > 0 && (
           <Swiper
-            modules={[Navigation]}
+            modules={[Navigation , Autoplay]}
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
             }}
             spaceBetween={18}
+            autoplay={{ delay: 2000, disableOnInteraction: false }}
             slidesPerView={2}
             breakpoints={{
               480: { slidesPerView: 3, spaceBetween: 18 },
@@ -201,10 +202,10 @@ export default function CategoriesSwiper() {
                         />
 
                         {/* Overlay خفيف */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/0 to-black/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/20 via-black/0 to-black/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
                         {/* لمعة سريعة */}
-                        <div className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 duration-1000 ease-in-out group-hover:translate-x-[120%] group-hover:opacity-100" />
+                        <div className="absolute inset-0 translate-x-[-120%] bg-linear-to-r from-transparent via-white/40 to-transparent opacity-0 duration-1000 ease-in-out group-hover:translate-x-[120%] group-hover:opacity-100" />
                       </div>
                     </div>
 

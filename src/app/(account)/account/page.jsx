@@ -154,7 +154,7 @@ const Account = () => {
           {/* CARD: معلومات أساسية */}
           <div className="md:col-span-2 bg-white/90 backdrop-blur rounded-2xl shadow-md p-4 md:p-5 border border-slate-100">
             <div className="flex items-center gap-4 mb-4">
-              <div className="flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-br from-blue-600 to-blue-400 text-white text-xl font-bold shadow-md">
+              <div className="flex items-center justify-center h-14 w-14 rounded-full bg-linear-to-br from-blue-600 to-blue-400 text-white text-xl font-bold shadow-md">
                 {username?.charAt(0) || "م"}
               </div>
               <div className="flex-1">

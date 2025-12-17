@@ -12,7 +12,7 @@ import "swiper/css/navigation";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import ProductCard from "./Card/ProductCard";
 
-export default function RecommendedProductsSwiper({ categoryId = 37 }) {
+export default function RecommendedProductsSwiper({ categoryId = 37 , product:currentProduct}) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
 
@@ -23,7 +23,10 @@ export default function RecommendedProductsSwiper({ categoryId = 37 }) {
     token,
   });
 
-  if (loading && !products.length) {
+    const productsWithoutCurrentProduct = products.filter((product) => product.product_id !== currentProduct.product_id);
+
+
+  if (loading && !productsWithoutCurrentProduct.length) {
     return (
       <p className="text-center text-sm text-gray-500 mt-4">
         ...جاري تحميل المنتجات المقترحة
@@ -39,7 +42,7 @@ export default function RecommendedProductsSwiper({ categoryId = 37 }) {
     );
   }
 
-  if (!products.length) {
+  if (!productsWithoutCurrentProduct.length) {
     return null; // مفيش منتجات مقترحة
   }
 

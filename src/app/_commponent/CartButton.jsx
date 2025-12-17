@@ -198,7 +198,7 @@ export default function AddToCartButton({ product, inCart: inCartProp }) {
         <Button
           onClick={handleFirstAdd}
           disabled={loading}
-          className="w-full cursor-pointer! rounded-٢xl bg-gradient-to-r from-green-600 to-green-700 px-4 py-2 text-sm font-semibold text-white transition-all hover:scale-105 hover:from-green-600 hover:to-green-800"
+          className="w-full cursor-pointer! rounded-٢xl bg-linear-to-r from-green-600 to-green-700 px-4 py-2 text-sm font-semibold text-white transition-all hover:scale-105 hover:from-green-600 hover:to-green-800"
         >
           {loading ? "جاري الإضافة..." : "أضف إلى السلة"}
         </Button>
@@ -206,7 +206,7 @@ export default function AddToCartButton({ product, inCart: inCartProp }) {
 
       {/* عداد الكمية */}
       {showCounter && (
-        <div className="flex w-full items-center justify-between rounded-full bg-gradient-to-r from-green-600 to-green-700 px-3 py-1 text-white">
+        <div className="flex w-full items-center justify-between rounded-full bg-linear-to-r from-green-600 to-green-700 px-3 py-1 text-white">
           <button
             onClick={handleDecrease}
             disabled={loading}

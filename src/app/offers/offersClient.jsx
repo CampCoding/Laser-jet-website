@@ -55,7 +55,7 @@ function OfferCard({ offer, products }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
       {/* هيدر العرض */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-gradient-to-l from-blue-50/80 via-indigo-50/70 to-sky-50/70 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-linear-to-l from-blue-50/80 via-indigo-50/70 to-sky-50/70 px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white">
             عرض خاص
@@ -81,7 +81,7 @@ function OfferCard({ offer, products }) {
       {/* المنتجات */}
       <div className="p-4 md:p-5">
         <div className="mb-3 flex items-center justify-between text-xs text-gray-500">
-          <span>عدد المنتجات في العرض: {products.length}</span>
+          <span>عدد المنتجات في العرض: {products?.length}</span>
           <span className="hidden md:inline">
             الأسعار الموضحة هي أسعار العرض بعد الخصم
           </span>
@@ -90,7 +90,7 @@ function OfferCard({ offer, products }) {
         <div 
             className="grid grid-cols-2 gap-2 md:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
             >
-          {products.map((p) => {
+          {products?.map((p) => {
             // ✅ نجهز المنتج علشان ProductCard يفهم إن فيه عرض
             const normalizedProduct = {
               ...p,

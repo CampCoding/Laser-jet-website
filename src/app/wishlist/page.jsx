@@ -21,11 +21,11 @@ const getBrand = (item) => {
 };
 
 export default function WishlistPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
 
   // ✅ استخدم الـ hook الجديد
-  const { wishlist: items, loading, error, refetch } = useWishlist(token);
+  const { wishlist: items = [], loading, error, refetch } = useWishlist(token);
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -36,15 +36,15 @@ export default function WishlistPage() {
   // ✅ اخفاء فوري للكروت بدون refetch
   const [hiddenIds, setHiddenIds] = useState(() => new Set());
 
-  // 🌀 حالة التحميل
-  if (loading) {
+  // ✅ Session loading (منع ظهور "تسجيل الدخول" لحظات)
+  if (status === "loading") {
     return (
-      <main className="mx-auto container  px-4 md:px-10 py-8 space-y-6 lg:space-y-8">
+      <main className="mx-auto container px-4 md:px-10 py-8 space-y-6 lg:space-y-8">
         <header className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">قائمة المفضلة</h1>
             <p className="mt-1 text-sm text-gray-500">
-              جاري تحميل المنتجات المفضلة الخاصة بك...
+              جاري التحقق من الحساب...
             </p>
           </div>
         </header>
@@ -67,7 +67,7 @@ export default function WishlistPage() {
   }
 
   // لو مش عامل لوجين
-  if (!session) {
+  if (status === "unauthenticated") {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
         <svg
@@ -98,6 +98,36 @@ export default function WishlistPage() {
           تسجيل الدخول
         </Link>
       </div>
+    );
+  }
+
+  // 🌀 حالة التحميل (تحميل المفضلة نفسها)
+  if (loading) {
+    return (
+      <main className="mx-auto container  px-4 md:px-10 py-8 space-y-6 lg:space-y-8">
+        <header className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">قائمة المفضلة</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              جاري تحميل المنتجات المفضلة الخاصة بك...
+            </p>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-2 gap-2 md:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="h-64 animate-pulse rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+            >
+              <div className="h-32 rounded-xl bg-gray-100 mb-3" />
+              <div className="h-3 w-3/4 rounded-full bg-gray-100 mb-2" />
+              <div className="h-3 w-1/2 rounded-full bg-gray-100 mb-1" />
+              <div className="h-3 w-1/3 rounded-full bg-gray-100" />
+            </div>
+          ))}
+        </div>
+      </main>
     );
   }
 
@@ -180,7 +210,15 @@ export default function WishlistPage() {
     }
 
     return result;
-  }, [items, hiddenIds, search, categoryFilter, brandFilter, hasOfferOnly, sortBy]);
+  }, [
+    items,
+    hiddenIds,
+    search,
+    categoryFilter,
+    brandFilter,
+    hasOfferOnly,
+    sortBy,
+  ]);
 
   // ✅ لما المستخدم يشيل منتج من المفضلة: اخفاء فوري
   const handleRemove = (id) => {

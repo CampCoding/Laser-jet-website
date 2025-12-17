@@ -12,7 +12,6 @@ import { SlidersHorizontal, X } from "lucide-react";
 function useDebouncedCallback(callback, delay) {
   const timeoutRef = useRef(null);
   const latestCallbackRef = useRef(callback);
-
   useEffect(() => {
     latestCallbackRef.current = callback;
   }, [callback]);
@@ -211,6 +210,7 @@ export default function ProductsPage() {
   const [dateTo, setDateTo] = useState(searchParams.get("date_to") || "");
   const [minSold, setMinSold] = useState(searchParams.get("min_sold") || "");
   const [maxSold, setMaxSold] = useState(searchParams.get("max_sold") || "");
+  const topRef = useRef(null);
 
   // ✅ فئة واحدة فقط (category_id)
   const [selectedCategory, setSelectedCategory] = useState(
@@ -270,75 +270,78 @@ export default function ProductsPage() {
   const updateFiltersInUrl = useCallback(
     (changes = {}) => {
       const params = new URLSearchParams(searchParams.toString());
-
+  
       if ("keywords" in changes) {
         if (changes.keywords) params.set("keywords", changes.keywords);
         else params.delete("keywords");
       }
-
+  
       if ("min_price" in changes) {
         if (changes.min_price || changes.min_price === 0)
           params.set("min_price", changes.min_price);
         else params.delete("min_price");
       }
-
+  
       if ("max_price" in changes) {
         if (changes.max_price || changes.max_price === 0)
           params.set("max_price", changes.max_price);
         else params.delete("max_price");
       }
-
+  
       if ("date_from" in changes) {
         if (changes.date_from) params.set("date_from", changes.date_from);
         else params.delete("date_from");
       }
-
+  
       if ("date_to" in changes) {
         if (changes.date_to) params.set("date_to", changes.date_to);
         else params.delete("date_to");
       }
-
+  
       if ("min_sold" in changes) {
         if (changes.min_sold) params.set("min_sold", changes.min_sold);
         else params.delete("min_sold");
       }
-
+  
       if ("max_sold" in changes) {
         if (changes.max_sold) params.set("max_sold", changes.max_sold);
         else params.delete("max_sold");
       }
-
-      // ✅ category_id واحد فقط
+  
       if ("category_id" in changes) {
         if (changes.category_id) params.set("category_id", changes.category_id);
         else params.delete("category_id");
       }
-
+  
       if ("sort_by" in changes) {
         params.set("sort_by", changes.sort_by || "date");
       }
-
+  
       if ("sort_order" in changes) {
         params.set("sort_order", changes.sort_order || "desc");
       }
-
-      // ✅ صفحة (page)
+  
+      const shouldScrollToTop = changes.__scrollToTop === true;
+  
       if ("page" in changes) {
         const p = Number(changes.page) || 1;
-        if (p > 1) {
-          params.set("page", String(p));
-        } else {
-          params.delete("page"); // الصفحة الأولى = بدون param
-        }
+        if (p > 1) params.set("page", String(p));
+        else params.delete("page");
       } else {
-        // أي تغيير في فلتر من غير تحديد page → نرجع لأول صفحة
         params.delete("page");
       }
-
+  
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  
+      if (shouldScrollToTop) {
+        requestAnimationFrame(() => {
+          topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
     },
     [searchParams, router, pathname]
   );
+  
 
   // ✅ debounce لفلترة السعر فقط
   const debouncedUpdatePrice = useDebouncedCallback(
@@ -408,14 +411,13 @@ export default function ProductsPage() {
   // ✅ التنقل بين الصفحات
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
-    updateFiltersInUrl({ page });
+    updateFiltersInUrl({ page, __scrollToTop: true });
   };
-
   const loading = productsLoading;
   const error = productsError || categoriesError;
 
   return (
-    <div className="container mx-auto px-4 md:px-10 py-6">
+    <div ref={topRef} className="container mx-auto px-4 md:px-10 py-6">
       <h1 className="text-xl md:text-2xl font-semibold mb-4 text-slate-800">
         المنتجات
       </h1>
@@ -440,7 +442,7 @@ export default function ProductsPage() {
 
       {/* Drawer الفلاتر للموبايل */}
       {isMobileFiltersOpen && (
-        <div className="fixed inset-0 z-[999999] flex md:hidden">
+        <div className="fixed inset-0 z-999999 flex md:hidden">
           {/* الخلفية الداكنة */}
           <div
             className="absolute inset-0 bg-black/40"

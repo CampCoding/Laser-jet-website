@@ -16,6 +16,8 @@ import {
   Facebook,
   Menu,
   X,
+  ChevronDown,
+  Link2,
 } from "lucide-react";
 import Link from "next/link";
 import Container from "../../utils/Container";
@@ -27,19 +29,23 @@ import SearchOverlay from "../../SearchMobileOverlay";
 import DesktopSearch from "./../../DesktopSearch";
 import { useDispatch, useSelector } from "react-redux";
 import { getCartThunk } from "../../../../store/cartSlice";
+import { Spinner } from "../../../../components/ui/spinner";
+
+import { Dropdown } from "antd";
+import useGetServices from "../../../../../hooks/useGetServices";
 
 export default function Navbar() {
-  const session = useSession();
-  const accessToken = session?.data?.user?.accessToken;
+  const { data: sessionData, status } = useSession();
+  const accessToken = sessionData?.user?.accessToken;
   const pathname = usePathname();
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (session.status !== "authenticated") return;
+    if (status !== "authenticated") return;
     if (!accessToken) return;
 
     dispatch(getCartThunk({ token: accessToken }));
-  }, [dispatch, accessToken, session]);
+  }, [dispatch, accessToken, status]);
 
   // ✅ Cart count from Redux
   const { items: cartItems = [] } = useSelector((state) => state.cart || {});
@@ -101,6 +107,18 @@ export default function Navbar() {
     };
   }, [menuOpen]);
 
+  const { services } = useGetServices({ onlyActive: true });
+
+
+
+  const otherServicesItems = services.map((service) => ({
+    key:service.name,
+    label: <a href={service.link} target="_blank" className="font-bold hover:text-blue-600!">{service.name}</a>,
+
+  }))
+  ;
+ 
+
   return (
     <header
       className={`sticky top-0 z-50 w-full bg-white/95 ${
@@ -108,78 +126,91 @@ export default function Navbar() {
       }`}
     >
       {/* 🔵 Top blue strip */}
-     {true &&
-       <div className="w-full bg-[#0648af] text-white">
-       <div className="container mx-auto flex gap-2 px-4 py-2 md:flex-row justify-between">
-         {/* Left: Offers + WhatsApp */}
-         <div className="flex flex-wrap items-center justify-between gap-2 md:w-auto md:justify-end">
-           <Link key={"Offers"} href={"/offers"} className="hidden md:block">
-             <button
-               type="button"
-               className="flex cursor-pointer items-center gap-1 rounded-full border border-white/60 px-3 py-1.5 text-[12px] font-bold transition hover:bg-white hover:text-blue-700 md:text-sm"
-             >
-               <Tag size={18} />
-               <span>عروضنا</span>
-             </button>
-           </Link>
+      {true && (
+        <div className="w-full bg-[#0648af] text-white">
+          <div className="container mx-auto flex gap-2 px-4 py-2 md:flex-row justify-between">
+            {/* Left: Offers + WhatsApp */}
+            <div className=" flex-wrap items-center justify-between gap-2 md:w-auto md:justify-end hidden md:flex">
+              <Link key={"Offers"} href={"/offers"} className="hidden md:block">
+                <button
+                  type="button"
+                  className="flex cursor-pointer items-center gap-1 rounded-full border border-white/60 px-3 py-1.5 text-[12px] font-bold transition hover:bg-white hover:text-blue-700 md:text-sm"
+                >
+                  <Tag size={18} />
+                  <span>عروضنا</span>
+                </button>
+              </Link>
+              <Link key={"Orders"} href={"/orders"} className="hidden md:block">
+                <button
+                  type="button"
+                  className="flex cursor-pointer items-center gap-1 rounded-full border border-white/60 px-3 py-1.5 text-[12px] font-bold transition hover:bg-white hover:text-blue-700 md:text-sm"
+                >
+                  <ShoppingCart size={18} />
+                  <span>طلباتي</span>
+                </button>
+              </Link>
+              <div className="hidden md:block">
+                <Dropdown
+                  menu={{ items: otherServicesItems }}
+                  trigger={["click"]}
+                  placement="bottomRight"
+                >
+                  <button
+                    type="button"
+                    className="flex cursor-pointer items-center gap-1 rounded-full border border-white/60 px-3 py-1.5 text-[12px] font-bold transition hover:bg-white hover:text-blue-700 md:text-sm"
+                  >
+                    <span>خدمات أخرى</span>
+                    <ChevronDown size={16} />
+                  </button>
+                </Dropdown>
+              </div>
+            </div>
 
-           <div className="flex items-center gap-2 md:border-r md:border-white/40 md:pr-4">
-             <span className="text-[11px] md:text-sm">تواصل معنا على:</span>
-             <Link
-               href="https://api.whatsapp.com/send/?phone=%2B201004331113&text&type=phone_number&app_absent=0"
-               target="_blank"
-               className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
-             >
-               <Whatsapp />
-             </Link>
-           </div>
-         </div>
-
-         {/* Right: Social links */}
-         <div className="flex  flex-wrap items-center justify-between gap-2 md:w-auto md:justify-start">
-           <Link key={"Orders"} href={"/orders"} className="hidden md:block">
-             <button
-               type="button"
-               className="flex cursor-pointer items-center gap-1 rounded-full border border-white/60 px-3 py-1.5 text-[12px] font-bold transition hover:bg-white hover:text-blue-700 md:text-sm"
-             >
-               <ShoppingCart size={18} />
-               <span>طلباتي</span>
-             </button>
-           </Link>
-
-           <div className="flex items-center gap-2 md:border-r md:border-white/40 md:pr-4">
-             <span className="text-[11px] md:text-sm">تابعنا على:</span>
-             <Link
-               href="https://www.facebook.com/laserjet.com.eg"
-               target="_blank"
-               className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
-             >
-               <Facebook className="h-4 w-4 text-blue-700" />
-             </Link>
-             <Link
-               href="https://www.instagram.com/laserjet.com.eg/"
-               target="_blank"
-               className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
-             >
-               <Instagram className="h-4 w-4 text-pink-600" />
-             </Link>
-             <a
-               href="https://www.youtube.com/@laserjet2458"
-               target="_blank"
-               className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
-             >
-               <Youtube className="h-4 w-4 text-red-600" />
-             </a>
-           </div>
-         </div>
-       </div>
-     </div>
-     }
+            {/* Right: Social links */}
+            <div className="flex  flex-wrap items-center justify-between gap-2 md:w-auto md:justify-start w-full">
+              <div className="flex items-center gap-2 md:border-r md:border-white/40 md:pr-4">
+                <span className="text-[11px] md:text-sm">تواصل معنا على:</span>
+                <Link
+                  href="https://api.whatsapp.com/send/?phone=%2B201004331113&text&type=phone_number&app_absent=0"
+                  target="_blank"
+                  className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
+                >
+                  <Whatsapp />
+                </Link>
+              </div>
+              <div className="flex items-center gap-2 md:border-r md:border-white/40 md:pr-4">
+                <span className="text-[11px] md:text-sm">تابعنا على:</span>
+                <Link
+                  href="https://www.facebook.com/laserjet.com.eg"
+                  target="_blank"
+                  className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
+                >
+                  <Facebook className="h-4 w-4 text-blue-700" />
+                </Link>
+                <Link
+                  href="https://www.instagram.com/laserjet.com.eg/"
+                  target="_blank"
+                  className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
+                >
+                  <Instagram className="h-4 w-4 text-pink-600" />
+                </Link>
+                <a
+                  href="https://www.youtube.com/@laserjet2458"
+                  target="_blank"
+                  className="rounded-full bg-white! p-2 shadow transition hover:scale-110"
+                >
+                  <Youtube className="h-4 w-4 text-red-600" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 🧭 Main navbar (الهيدر كله sticky الآن) */}
       <nav
         className={`w-full border-b transition-all duration-300 ${
-          scrolled ? "bg-blue-50/80 backdrop-blur-sm" : "bg-white/95"
+          scrolled ? "bg-blue-50/80 " : "bg-white/95"
         }`}
       >
         <Container className="mx-auto">
@@ -229,7 +260,9 @@ export default function Navbar() {
                   </button>
                 </Link>
 
-                {session?.data ? (
+                {status === "loading" ? (
+                  <Spinner />
+                ) : sessionData ? (
                   <Link href="/account">
                     <button
                       className={`flex cursor-pointer items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
@@ -255,7 +288,9 @@ export default function Navbar() {
 
             {/* Mobile right (cart + search + menu) */}
             <div className="flex items-center gap-2 md:hidden">
-              {session?.data ? (
+              {status === "loading" ? (
+                <Spinner />
+              ) : sessionData ? (
                 <Link href="/cart">
                   <button className="relative cursor-pointer rounded-full border border-gray-200 p-2 hover:border-blue-500 hover:text-blue-600">
                     <ShoppingCart size={20} />
@@ -346,11 +381,21 @@ export default function Navbar() {
                     </button>
                   </Link>
                 ))}
+                <hr />
+                <h6 className="font-semibold text-blue-600 text-sm! mt-5">خدمات أخرى</h6>
+                <div className="flex flex-col gap-1 text-sm">
+
+                {
+                  otherServicesItems.map((item) =>{
+                    return <div className="flex items-center gap-2 text-gray-700 hover:text-blue-600"> <Link2  className="text-[5px]" /> {item.label}</div>
+                  })
+                }
+                </div>
               </div>
 
               {/* Account / Auth actions */}
               <div className="border-t px-3 py-3 flex flex-col">
-                {session?.data ? (
+                {sessionData ? (
                   <>
                     <Link href="/account" className="mb-2.5!">
                       <button

@@ -13,7 +13,6 @@ import AddAddressModal from "../components/AddAddressModal";
 import EditAddressModal from "../components/EditAddressModal";
 import useGetDeliveryAreas from "../../../hooks/useGerDeliveryAreas";
 
-import axios from "axios";
 import { toast } from "sonner";
 import {
   SquarePen,
@@ -35,6 +34,9 @@ import { useDispatch } from "react-redux";
 import { getCartThunk } from "../../store/cartSlice";
 import EmptyCheckout from "../_commponent/EmptyCheckout";
 import cx from "../../lib/cx";
+
+// ✅ NEW: promo check hook
+import useCheckPromoCode from "../../../hooks/useCheckPromoCode";
 
 const formatPrice = (value) =>
   new Intl.NumberFormat("ar-EG", { style: "currency", currency: "EGP" }).format(
@@ -105,11 +107,20 @@ export default function CheckoutPage() {
 
   const [loading, setLoading] = useState(false);
 
-  // ✅ Promocode States
+  // ✅ Promocode States (UI only)
   const [promocodeInput, setPromocodeInput] = useState("");
+
+  // ✅ NEW: hook state
+  const {
+    checkPromo,
+    data: promoCheckResponse,
+    loading: promocodeLoading,
+    error: promocodeError,
+    reset: resetPromoHook,
+  } = useCheckPromoCode();
+
+  // ✅ applied promo object (from API)
   const [appliedPromocode, setAppliedPromocode] = useState(null);
-  const [promocodeLoading, setPromocodeLoading] = useState(false);
-  const [promocodeError, setPromocodeError] = useState("");
 
   const items = cart?.data || [];
 
@@ -154,12 +165,12 @@ export default function CheckoutPage() {
         const selectedInst = item.installments?.find(
           (inst) => inst.installment_id === selectedInstallment[item.product_id]
         );
-        
+
         if (selectedInst) {
           return sum + selectedInst.full_price * item.quantity;
         }
       }
-      
+
       const unitPrice = item.offer?.sell_value ?? item.sell_price;
       return sum + unitPrice * item.quantity;
     }, 0);
@@ -170,76 +181,74 @@ export default function CheckoutPage() {
     [subtotal, totalWithInstallments]
   );
 
-  // ✅ حساب خصم الـ Promocode
+  // ✅ IMPORTANT:
+  // order_total اللي هنبعته للـ promo API (بدون شحن)
+  const orderTotalForPromo = useMemo(() => {
+    return Number(totalWithInstallments || 0);
+  }, [totalWithInstallments]);
+
+  // ✅ Use API results as source of truth (discount + final_total)
   const promocodeDiscount = useMemo(() => {
-    if (!appliedPromocode) return 0;
-    
-    const { discount_type, discount_value } = appliedPromocode;
-    
-    if (discount_type === "percentage") {
-      return (totalWithInstallments * discount_value) / 100;
-    } else if (discount_type === "fixed") {
-      return discount_value;
-    }
-    
-    return 0;
-  }, [appliedPromocode, totalWithInstallments]);
+    const d = promoCheckResponse?.data?.discount;
+    return d ? Number(d) : 0;
+  }, [promoCheckResponse]);
 
-  // ✅ الإجمالي بعد خصم الـ Promocode
   const totalAfterPromocode = useMemo(() => {
-    return Math.max(0, totalWithInstallments - promocodeDiscount);
-  }, [totalWithInstallments, promocodeDiscount]);
+    const apiFinal = promoCheckResponse?.data?.final_total;
+    if (apiFinal == null) return orderTotalForPromo;
+    return Number(apiFinal);
+  }, [promoCheckResponse, orderTotalForPromo]);
 
-  const totalDue = useMemo(
-    () => totalAfterPromocode + (selectedAddress ? Number(shippingPrice || 0) : 0),
-    [totalAfterPromocode, shippingPrice, selectedAddress]
-  );
+  const totalDue = useMemo(() => {
+    const ship = selectedAddress ? Number(shippingPrice || 0) : 0;
+    return Math.max(0, totalAfterPromocode + ship);
+  }, [totalAfterPromocode, shippingPrice, selectedAddress]);
 
-  // ✅ دالة للتحقق من الـ Promocode
+  // ✅ apply promo via hook (NEW)
   const handleApplyPromocode = async () => {
-    if (!promocodeInput.trim()) {
-      setPromocodeError("الرجاء إدخال كود الخصم");
+    const code = promocodeInput.trim().toUpperCase();
+    if (!code) {
+      toast.error("الرجاء إدخال كود الخصم");
       return;
     }
 
-    setPromocodeLoading(true);
-    setPromocodeError("");
+    // لو سلة فاضية أو الإجمالي صفر
+    if (!items?.length || orderTotalForPromo <= 0) {
+      toast.error("لا يمكن تطبيق كود الخصم على سلة فارغة");
+      return;
+    }
 
-    try {
-      const response = await axios.post(
-        "https://lesarjet.camp-coding.site/api/promocode/validate",
-        { code: promocodeInput },
-        {
-          headers: {
-            Authorization: `Bearer ${session?.user?.accessToken}`,
-          },
-        }
-      );
+    const res = await checkPromo({
+      code,
+      orderTotal: orderTotalForPromo,
+    });
 
-      if (response.data?.success) {
-        setAppliedPromocode(response.data.data);
-        toast.success("تم تطبيق كود الخصم بنجاح! 🎉");
-        setPromocodeError("");
-      } else {
-        setPromocodeError(response.data?.message || "كود خصم غير صالح");
-        toast.error("كود خصم غير صالح");
-      }
-    } catch (error) {
-      const errorMsg = error?.response?.data?.message || "كود خصم غير صالح";
-      setPromocodeError(errorMsg);
-      toast.error(errorMsg);
-    } finally {
-      setPromocodeLoading(false);
+    if (res?.success && res?.data?.valid) {
+      // promo object from API: res.data.promo
+      setAppliedPromocode(res.data.promo || { code });
+      toast.success(res?.message || "تم تطبيق كود الخصم بنجاح! 🎉");
+    } else {
+      setAppliedPromocode(null);
+      toast.error(res?.message || "كود خصم غير صالح");
     }
   };
 
-  // ✅ دالة لإلغاء الـ Promocode
   const handleRemovePromocode = () => {
     setAppliedPromocode(null);
     setPromocodeInput("");
-    setPromocodeError("");
+    resetPromoHook();
     toast.info("تم إزالة كود الخصم");
   };
+
+  // ✅ لو الإجمالي اتغير (كمية/تقسيط/منتجات) لازم نعيد فحص الكود تلقائيًا (اختياري)
+  // هنا هنمسح الكود لتجنب أرقام غلط
+  useEffect(() => {
+    if (!appliedPromocode) return;
+    // أي تغيير في الإجمالي → الأفضل إعادة الفحص أو إلغاء التطبيق
+    // هنا هنلغي التطبيق تلقائيًا (أكثر أمانًا)
+    handleRemovePromocode();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderTotalForPromo, paymentMethod, selectedInstallment, items.length]);
 
   useEffect(() => {
     if (session) fetchAddresses();
@@ -275,7 +284,7 @@ export default function CheckoutPage() {
       ...prev,
       [productId]: installmentId,
     }));
-    
+
     toast.success("تم تحديث خطة التقسيط وإعادة حساب المبلغ");
   };
 
@@ -323,29 +332,34 @@ export default function CheckoutPage() {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "https://lesarjet.camp-coding.site/api/order/create",
-        {
+      const response = await fetch("https://lesarjet.camp-coding.site/api/order/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.user.accessToken}`,
+        },
+        body: JSON.stringify({
           payment_type,
           payment_method,
           name: session?.user?.name,
           phone: session?.user?.phone,
           installments,
-          promocode: appliedPromocode?.code || null, // ✅ إرسال الـ promocode
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${session.user.accessToken}`,
-          },
-        }
-      );
+          promo_code: appliedPromocode?.code || null,
+        }),
+      });
+
+      const json = await response.json();
+
+      if (!json?.success) {
+        throw new Error(json?.message || "حدث خطأ");
+      }
 
       toast.success("تم انشاء الطلب بنجاح");
       dispatch(getCartThunk({ token: session.user.accessToken }));
       router.replace("/orders");
 
       if (payment_method === "credit") {
-        const paymentUrl = response.data?.data?.message?.data?.url;
+        const paymentUrl = json?.data?.message?.data?.url;
         if (paymentUrl && typeof window !== "undefined") {
           window.open(paymentUrl, "_blank");
         }
@@ -358,8 +372,9 @@ export default function CheckoutPage() {
       setSelectedInstallment({});
       setAppliedPromocode(null);
       setPromocodeInput("");
+      resetPromoHook();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "حدث خطأ");
+      toast.error(error?.message || "حدث خطأ");
     } finally {
       setLoading(false);
     }
@@ -532,7 +547,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100">
+    <main className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-slate-100">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur border-b border-slate-100 shadow-sm z-30">
         <div className="container mx-auto px-4 py-5 md:py-6 flex flex-col gap-4">
@@ -632,15 +647,15 @@ export default function CheckoutPage() {
                 {items.map((item) => {
                   const unitPrice = item.sell_price;
                   const offerPrice = item.offer?.sell_value ?? null;
-                  
+
                   let lineTotal;
                   let isInstallmentApplied = false;
-                  
+
                   if (paymentMethod === "miniMoney" && selectedInstallment[item.product_id]) {
                     const selectedInst = item.installments?.find(
                       (inst) => inst.installment_id === selectedInstallment[item.product_id]
                     );
-                    
+
                     if (selectedInst) {
                       lineTotal = selectedInst.full_price * item.quantity;
                       isInstallmentApplied = true;
@@ -745,7 +760,7 @@ export default function CheckoutPage() {
                               💳 سعر التقسيط مطبّق
                             </Tag>
                           )}
-                          
+
                           {!isInstallmentApplied && offerPrice && (
                             <Tag color="green" className="text-sm py-1 px-3">
                               وفر {formatPrice(unitPrice - offerPrice)} لكل قطعة
@@ -828,8 +843,8 @@ export default function CheckoutPage() {
                           }`}
                           style={{ borderRadius: 14, borderWidth: 2 }}
                           onClick={() => {
-                            setSelectedAddress(address.id)
-                            handleTogglePrimary(address)
+                            setSelectedAddress(address.id);
+                            handleTogglePrimary(address);
                           }}
                           bodyStyle={{ padding: 14 }}
                         >
@@ -929,7 +944,6 @@ export default function CheckoutPage() {
                   setLongitude={setLongitude}
                 />
 
-                {/* Delete */}
                 <Modal
                   open={deleteModalOpen}
                   title={<span className="text-lg font-bold">تأكيد الحذف</span>}
@@ -952,7 +966,6 @@ export default function CheckoutPage() {
                   </p>
                 </Modal>
 
-                {/* Edit modal */}
                 <EditAddressModal
                   loading={addressesLoading}
                   isModalOpen={editModalOpen}
@@ -1179,7 +1192,7 @@ export default function CheckoutPage() {
                 </div>
               </Card>
 
-              {/* ✅ Promocode Card */}
+              {/* ✅ Promocode Card (NOW USING HOOK) */}
               <Card
                 title={
                   <div className="flex items-center gap-3">
@@ -1199,7 +1212,7 @@ export default function CheckoutPage() {
                         value={promocodeInput}
                         onChange={(e) => {
                           setPromocodeInput(e.target.value.toUpperCase());
-                          setPromocodeError("");
+                          if (promocodeError) resetPromoHook();
                         }}
                         onPressEnter={handleApplyPromocode}
                         className="flex-1 rounded-xl"
@@ -1238,9 +1251,7 @@ export default function CheckoutPage() {
                             {appliedPromocode.code}
                           </p>
                           <p className="text-sm text-slate-600">
-                            {appliedPromocode.discount_type === "percentage"
-                              ? `خصم ${appliedPromocode.discount_value}%`
-                              : `خصم ${formatPrice(appliedPromocode.discount_value)}`}
+                            {promoCheckResponse?.message || "تم تطبيق كود الخصم"}
                           </p>
                         </div>
                       </div>

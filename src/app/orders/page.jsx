@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
 import {
   Package,
   CreditCard,
@@ -12,43 +13,105 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  Percent,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import useOrders from "../../../hooks/useGetOrders";
+
+// ✅ عدّل اللينك لو EndPoint مختلف عندك
+const ORDERS_API_URL = "https://lesarjet.camp-coding.site/api/order/list";
+
 export default function OrdersList() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
 
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const topRef = useRef(null);
 
   // 🧠 قراءة page & per_page من الـ URL
   const urlPage = Number(searchParams.get("page") || "1");
-  const currentPageFromUrl =
-    Number.isNaN(urlPage) || urlPage < 1 ? 1 : urlPage;
+  const currentPageFromUrl = Number.isNaN(urlPage) || urlPage < 1 ? 1 : urlPage;
 
   const urlPerPage = Number(searchParams.get("per_page") || "10");
-  const perPage =
-    Number.isNaN(urlPerPage) || urlPerPage <= 0 ? 10 : urlPerPage;
+  const perPage = Number.isNaN(urlPerPage) || urlPerPage <= 0 ? 10 : urlPerPage;
 
-  // 🛒 جلب الطلبات من الهوك
-  const { orders, pagination, loading, error } = useOrders(
-    token,
-    currentPageFromUrl,
-    perPage
+  // 🧾 State
+  const [orders, setOrders] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // ✅ جلب الطلبات بـ axios (بدون react-query)
+  useEffect(() => {
+    if (!token) return;
+
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const res = await axios.get(ORDERS_API_URL, {
+          signal: controller.signal,
+          headers: { Authorization: `Bearer ${token}` },
+          params: { page: currentPageFromUrl, per_page: perPage },
+        });
+
+        // يدعم الشكل اللي انت بعته:
+        // { success, data: { orders: [], pagination: {} } }
+        const payload = res?.data;
+        const list =
+          payload?.data?.orders ?? payload?.orders ?? payload?.data ?? [];
+
+        const pag = payload?.data?.pagination ?? payload?.pagination ?? null;
+
+        setOrders(Array.isArray(list) ? list : []);
+        setPagination(pag);
+      } catch (e) {
+        if (e?.name === "CanceledError") return;
+
+        const msg =
+          e?.response?.data?.message ||
+          e?.message ||
+          "حدث خطأ أثناء جلب الطلبات";
+        setError(msg);
+        toast.error(msg);
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [token, currentPageFromUrl, perPage]);
+
+  // ✅ Normalize pagination fields (supports multiple API shapes)
+  const currentPage =
+    pagination?.current_page ?? pagination?.page ?? currentPageFromUrl;
+
+  const totalPages =
+    pagination?.totalPages ??
+    pagination?.total_pages ??
+    pagination?.last_page ??
+    pagination?.pages ??
+    1;
+
+  const totalOrders =
+    pagination?.total ??
+    pagination?.total_items ??
+    pagination?.count ??
+    (orders?.length || 0);
+
+  // فلترة الطلبات الفارغة (محليًا)
+  const filteredOrders = useMemo(
+    () => (orders || []).filter((o) => Number(o?.total_price || 0) !== 0),
+    [orders]
   );
 
-  // 🔔 لو في خطأ من الهوك
-  useEffect(() => {
-    if (error) {
-      toast.error(error);
-    }
-  }, [error]);
-
-  // 🧭 تحديث الـ URL عند تغيير page / per_page
+  // 🧭 تحديث الـ URL عند تغيير page / per_page + scroll to top
   const updateQuery = (changes = {}) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -67,36 +130,32 @@ export default function OrdersList() {
     const url = queryString ? `${pathname}?${queryString}` : pathname;
 
     router.push(url, { scroll: false });
+
+    requestAnimationFrame(() => {
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const handlePageChange = (page) => {
-    if (!pagination) return;
-    if (page < 1 || page > pagination.totalPages) return;
-    updateQuery({ page, per_page: perPage });
+    const p = Number(page) || 1;
+    if (p < 1 || p > Number(totalPages)) return;
+    updateQuery({ page: p, per_page: perPage });
   };
 
   const handlePerPageChange = (e) => {
     const newPerPage = Number(e.target.value) || 10;
-    // لما نغير عدد العناصر نرجّع لأول صفحة
     updateQuery({ page: 1, per_page: newPerPage });
   };
 
-  // فلترة الطلبات الفارغة
-  const filteredOrders = (orders || []).filter(
-    (order) => order.total_price !== 0
-  );
-
-  const currentPage = pagination?.current_page || currentPageFromUrl;
-  const totalPages = pagination?.totalPages || 1;
-  const totalOrders = pagination?.total || filteredOrders.length;
-  // حالة التحميل
-  if (loading) {
+  // ✅ Session loading (منع ظهور "يرجى تسجيل الدخول" لحظات)
+  if (status === "loading") {
     return (
       <section className="py-8 md:py-12" dir="rtl">
         <div className="mx-auto container md:px-10 px-4">
-          <div className="mb-6 h-8 w-40 animate-pulse rounded-full bg-gray-200" />
+          <div className="mb-2 h-8 w-40 animate-pulse rounded-full bg-gray-200" />
+          <div className="mb-6 h-4 w-64 animate-pulse rounded-full bg-gray-200" />
           <div className="space-y-4">
-            {[1, 2 ,3, 4].map((i) => (
+            {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
                 className="h-40 animate-pulse rounded-2xl border border-gray-300 bg-gray-100"
@@ -107,8 +166,9 @@ export default function OrdersList() {
       </section>
     );
   }
+
   // لو مش عامل لوجين
-  if (!token && !loading ) {
+  if (status === "unauthenticated") {
     return (
       <section className="py-10" dir="rtl">
         <div className="mx-auto max-w-4xl rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
@@ -124,18 +184,63 @@ export default function OrdersList() {
     );
   }
 
-  // لو مفيش طلبات
+  // حالة التحميل (تحميل الطلبات نفسها)
+  if (loading) {
+    return (
+      <section className="py-8 md:py-12" dir="rtl">
+        <div className="mx-auto container md:px-10 px-4">
+          <div className="mb-6 h-8 w-40 animate-pulse rounded-full bg-gray-200" />
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-40 animate-pulse rounded-2xl border border-gray-300 bg-gray-100"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ✅ لو الصفحة الحالية فاضية بسبب الفلترة
   if (!filteredOrders.length) {
+    const isFirstPage = Number(currentPage) === 1;
+
     return (
       <section className="py-10" dir="rtl">
         <div className="mx-auto max-w-4xl rounded-2xl border border-dashed border-gray-300 bg-blue-50 p-8 text-center">
           <Package className="mx-auto mb-3 h-10 w-10 text-gray-400" />
           <h2 className="mb-2 text-lg font-semibold text-gray-800">
-            لا يوجد طلبات حتى الآن
+            {isFirstPage
+              ? "لا يوجد طلبات حتى الآن"
+              : "لا توجد طلبات في هذه الصفحة"}
           </h2>
           <p className="text-sm text-gray-500">
-            عند إتمام أي طلب من المتجر، سيظهر لك هنا تفاصيله وحالته خطوة بخطوة.
+            {isFirstPage
+              ? "عند إتمام أي طلب من المتجر، سيظهر لك هنا تفاصيله وحالته خطوة بخطوة."
+              : "جرّب الرجوع لأول صفحة أو قلّل عدد العناصر في الصفحة."}
           </p>
+
+          {!isFirstPage && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <button
+                onClick={() => handlePageChange(1)}
+                className="rounded-full bg-blue-600 px-4 py-2 text-white text-sm hover:bg-blue-700"
+              >
+                العودة لأول صفحة
+              </button>
+
+              <button
+                onClick={() =>
+                  handlePageChange(Math.max(1, Number(currentPage) - 1))
+                }
+                className="rounded-full border border-gray-300 bg-white px-4 py-2 text-gray-700 text-sm hover:bg-gray-50"
+              >
+                الصفحة السابقة
+              </button>
+            </div>
+          )}
         </div>
       </section>
     );
@@ -143,7 +248,8 @@ export default function OrdersList() {
 
   return (
     <section className="py-8 md:py-12" dir="rtl">
-      <div className="mx-auto container  px-4 px-10">
+      <div ref={topRef} />
+      <div className="mx-auto container px-4 md:px-10">
         {/* العنوان + عدد الطلبات + per_page */}
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -192,7 +298,7 @@ export default function OrdersList() {
         </div>
 
         {/* الباجيناشن */}
-        {totalPages > 1 && (
+        {Number(totalPages) > 1 && (
           <div className="mt-8 flex flex-col items-center gap-3 text-xs md:flex-row md:justify-between">
             <div className="text-gray-500">
               صفحة <span className="font-semibold">{currentPage}</span> من{" "}
@@ -202,10 +308,10 @@ export default function OrdersList() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
+                onClick={() => handlePageChange(Number(currentPage) - 1)}
+                disabled={Number(currentPage) === 1}
                 className={`rounded-full px-3 py-1.5 border ${
-                  currentPage === 1
+                  Number(currentPage) === 1
                     ? "border-gray-200 text-gray-300 cursor-not-allowed"
                     : "border-gray-300 text-gray-700 hover:bg-gray-50"
                 }`}
@@ -213,10 +319,10 @@ export default function OrdersList() {
                 السابق
               </button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
+              {Array.from({ length: Number(totalPages) }, (_, i) => i + 1)
                 .filter((p) => {
-                  if (p === 1 || p === totalPages) return true;
-                  if (Math.abs(p - currentPage) <= 2) return true;
+                  if (p === 1 || p === Number(totalPages)) return true;
+                  if (Math.abs(p - Number(currentPage)) <= 2) return true;
                   return false;
                 })
                 .map((p, idx, arr) => {
@@ -231,7 +337,7 @@ export default function OrdersList() {
                         type="button"
                         onClick={() => handlePageChange(p)}
                         className={`mx-0.5 rounded-full px-3 py-1.5 border ${
-                          p === currentPage
+                          p === Number(currentPage)
                             ? "border-blue-600 bg-blue-600 text-white"
                             : "border-gray-300 text-gray-700 hover:bg-gray-50"
                         }`}
@@ -244,10 +350,10 @@ export default function OrdersList() {
 
               <button
                 type="button"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(Number(currentPage) + 1)}
+                disabled={Number(currentPage) === Number(totalPages)}
                 className={`rounded-full px-3 py-1.5 border ${
-                  currentPage === totalPages
+                  Number(currentPage) === Number(totalPages)
                     ? "border-gray-200 text-gray-300 cursor-not-allowed"
                     : "border-gray-300 text-gray-700 hover:bg-gray-50"
                 }`}
@@ -289,21 +395,31 @@ function OrderCard({ order }) {
   const paymentTypeLabel = getPaymentTypeLabel(order.payment_type);
   const paymentMethodLabel = getPaymentMethodLabel(order.payment_method);
 
-  const deliveryPrice = order.delivery_price || 0;
-  const total = order.total_price || 0;
-  const grandTotal = total + deliveryPrice;
+  const deliveryPrice = Number(order.delivery_price || 0);
+
+  // ✅ حسب شكل الـ API اللي بعته:
+  // subtotal = قبل الخصم
+  // promo_discount = قيمة الخصم
+  // total_price = بعد الخصم (قبل الشحن)
+  const subtotal = Number(order.subtotal || 0);
+  const promoCode = order.promo_code || null;
+  const promoDiscount = Number(order.promo_discount || 0);
+  const totalAfterDiscount = Number(order.total_price || 0);
+  const grandTotal = totalAfterDiscount;
 
   const products = order.products || [];
   const productsCount = products.length;
 
   const firstProduct = products[0];
   const installments = firstProduct?.installments || [];
-  const { paidCount, pendingCount } = getInstallmentsSummary(installments);
+  const { paidCount, pendingCount } = getInstallmentsSummary(
+    Array.isArray(installments) ? installments : []
+  );
 
   return (
     <article className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       {/* شريط علوي بحالة الطلب */}
-      <div className="flex items-center justify-between gap-3 border-b border-gray-100 bg-gradient-to-l from-blue-50/60 to-indigo-50/40 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 border-b border-gray-100 bg-linear-to-l from-blue-50/60 to-indigo-50/40 px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-blue-900/90 px-3 py-1 text-xs font-semibold text-white">
             رقم الطلب #{order.order_id}
@@ -320,6 +436,13 @@ function OrderCard({ order }) {
             {paymentMeta.icon}
             {paymentMeta.label}
           </span>
+
+          {promoCode && promoDiscount > 0 && (
+            <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-orange-50 text-orange-700 border border-orange-100 px-2.5 py-1 text-[11px] font-semibold">
+              <Percent className="h-3 w-3" />
+              كود: {promoCode} (-{promoDiscount} جم)
+            </span>
+          )}
         </div>
 
         <div className="text-left text-[11px] text-gray-600 md:text-xs">
@@ -375,14 +498,13 @@ function OrderCard({ order }) {
                     ({paymentMethodLabel})
                   </p>
                 )}
-                {installments.length > 0 && (
+                {Array.isArray(installments) && installments.length > 0 && (
                   <p className="mt-0.5 text-[11px] text-purple-700">
                     خطة تقسيط: مدفوع{" "}
                     <span className="font-bold">
                       {paidCount}/{installments.length}
                     </span>{" "}
-                    - متبقي{" "}
-                    <span className="font-bold">{pendingCount}</span>
+                    - متبقي <span className="font-bold">{pendingCount}</span>
                   </p>
                 )}
               </div>
@@ -392,9 +514,7 @@ function OrderCard({ order }) {
             <div className="flex items-start gap-2 rounded-xl border border-gray-100 bg-white px-3 py-2">
               <Truck className="mt-0.5 h-4 w-4 text-emerald-600" />
               <div>
-                <p className="text-[11px] font-semibold text-gray-700">
-                  الشحن
-                </p>
+                <p className="text-[11px] font-semibold text-gray-700">الشحن</p>
                 <p className="text-gray-900">
                   مصاريف الشحن: {deliveryPrice} جم
                 </p>
@@ -404,6 +524,16 @@ function OrderCard({ order }) {
               </div>
             </div>
           </div>
+
+          {/* كود الخصم على الموبايل */}
+          {promoCode && promoDiscount > 0 && (
+            <div className="md:hidden flex items-center gap-2 rounded-xl border border-orange-100 bg-orange-50 px-3 py-2 text-xs text-orange-700">
+              <Percent className="h-4 w-4" />
+              <span>
+                كود: <b>{promoCode}</b> — خصم: <b>{promoDiscount} جم</b>
+              </span>
+            </div>
+          )}
 
           {/* بيانات التواصل */}
           <div className="grid gap-3 text-xs md:grid-cols-2">
@@ -487,7 +617,9 @@ function OrderCard({ order }) {
                     {product.product_price && product.product_quantity && (
                       <span className="rounded-full bg-blue-900 px-2 py-0.5 text-white text-[10px]">
                         إجمالي المنتج:{" "}
-                        {product.product_price * product.product_quantity} جم
+                        {Number(product.product_price) *
+                          Number(product.product_quantity)}{" "}
+                        جم
                       </span>
                     )}
                   </div>
@@ -498,7 +630,7 @@ function OrderCard({ order }) {
         </div>
 
         {/* ملخص الأرقام + الفاتورة */}
-        <div className="w-full max-w-xs rounded-2xl border border-gray-100 bg-blue-50 p-4 text-sm md:w-64 md:self-stretch md:bg-gradient-to-b md:from-slate-900 md:to-slate-800 md:text-gray-100">
+        <div className="w-full max-w-xs rounded-2xl border border-gray-100 bg-blue-50 p-4 text-sm md:w-64 md:self-stretch md:bg-linear-to-b md:from-slate-900 md:to-slate-800 md:text-gray-100">
           <h3 className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-gray-600 md:text-gray-300">
             ملخص مالي
             <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-gray-700 md:text-gray-200 border border-white/10">
@@ -507,14 +639,18 @@ function OrderCard({ order }) {
           </h3>
 
           <div className="space-y-1.5 text-xs">
-            <Row label="إجمالي المنتجات" value={`${total} جم`} />
-            <Row label="مصاريف الشحن" value={`${deliveryPrice} جم`} />
-            <div className="border-t border-gray-200 pt-2 md:border-gray-600">
+            <Row label="الإجمالي" value={`${subtotal} جم`} />
+            {promoCode && promoDiscount > 0 && (
               <Row
-                label="الإجمالي النهائي"
-                value={`${grandTotal} جم`}
+                label={`خصم الكود (${promoCode})`}
+                value={`- ${promoDiscount} جم`}
                 strong
               />
+            )}
+            {/* <Row label="الإجمالي بعد الخصم" value={`${totalAfterDiscount} جم`} /> */}
+            <Row label="مصاريف الشحن" value={`${deliveryPrice} جم`} />
+            <div className="border-t border-gray-200 pt-2 md:border-gray-600">
+              <Row label="الإجمالي النهائي" value={`${grandTotal} جم`} strong />
             </div>
           </div>
 

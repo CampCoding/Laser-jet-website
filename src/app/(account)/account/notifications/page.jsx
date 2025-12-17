@@ -10,6 +10,10 @@ export default function NotificationsPage() {
 
   const { notifications, loading, error, refetch } = useNotifications(token);
 
+
+
+
+
   if (!token) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4">
@@ -101,7 +105,22 @@ export default function NotificationsPage() {
     );
   }
 
-  const count = notifications?.length || 0;
+  const sortedNotifications = useMemo(() => {
+    const list = Array.isArray(notifications) ? [...notifications] : [];
+  
+    return list.sort((a, b) => {
+      const da = a?.created_at ? new Date(a.created_at).getTime() : 0;
+      const db = b?.created_at ? new Date(b.created_at).getTime() : 0;
+  
+      // الأحدث أولاً
+      if (db !== da) return db - da;
+  
+      // fallback لو نفس التاريخ أو التاريخ مش موجود
+      return Number(b?.id || 0) - Number(a?.id || 0);
+    });
+  }, [notifications]);
+  
+  const count = sortedNotifications.length;
   const hasNotifications = count > 0;
 
   return (
@@ -141,23 +160,24 @@ export default function NotificationsPage() {
 
         {/* 📨 قائمة الإشعارات أو حالة عدم وجود إشعارات */}
         {hasNotifications ? (
-          <div className="space-y-3">
-            {notifications.map((n) => {
-              const isRead =
-                n.is_read === 1 ||
-                n.is_read === true ||
-                n.read === 1 ||
-                n.read === true;
+  <div className="space-y-3">
+    {sortedNotifications.map((n) => {
+      const isRead =
+        n.is_read === 1 ||
+        n.is_read === true ||
+        n.read === 1 ||
+        n.read === true;
 
-              return (
-                <div
-                  key={n.id}
-                  className={`group rounded-xl border p-3 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition hover:-translate-y-[1px] hover:shadow-md ${
-                    isRead
-                      ? "border-slate-100 bg-slate-50/60"
-                      : "border-emerald-100 bg-emerald-50/70"
-                  }`}
-                >
+      return (
+        <div
+          key={n.id}
+          className={`group rounded-xl border p-3 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition hover:-translate-y-[1px] hover:shadow-md ${
+            isRead
+              ? "border-slate-100 bg-slate-50/60"
+              : "border-emerald-100 bg-emerald-50/70"
+          }`}
+        >
+                
                   <div className="mb-1.5 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span

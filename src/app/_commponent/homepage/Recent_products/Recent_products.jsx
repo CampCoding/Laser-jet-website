@@ -11,6 +11,8 @@ import Container from "../../utils/Container";
 import AddToCartButton from "../../CartButton";
 import ProductCard from "../../Card/ProductCard";
 import useGetHomeData from "../../../../../hooks/useGetHomeData";
+import { Button } from "../../../../components/ui/button";
+import Link from "next/link";
 
 export default function Recent_products() {
   const [favorites, setFavorites] = useState({});
@@ -33,7 +35,7 @@ export default function Recent_products() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-slate-100 py-12 sm:py-16">
+    <section className="relative overflow-hidden bg-linear-to-b from-white via-slate-50 to-slate-100 py-6 sm:py-16">
       {/* خلفية ديكورية خفيفة */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -right-24 -top-24 h-56 w-56 rounded-full bg-blue-100/60 blur-3xl" />
@@ -43,16 +45,16 @@ export default function Recent_products() {
       <Container className="relative z-10 mx-auto">
         {/* هيدر السكشن */}
         <div
-          className="mb-8 flex flex-col gap-4 text-center md:mb-10 md:flex-row md:items-center md:justify-between md:text-right"
+          className="mb-8 flex flex-col gap-4 text-center md:mb-10 md:flex-row md:items-center justify-center items-center md:justify-between md:text-right"
           data-aos="fade-up"
         >
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-medium text-blue-700 shadow-sm">
+            <div className="inline-flex items-center gap-2  rounded-full bg-blue-50 px-3 py-1 text-[11px] font-medium text-blue-700 shadow-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
               جديد في المتجر
             </div>
 
-            <h2 className="bg-gradient-to-r from-blue-700 via-sky-500 to-blue-700 bg-clip-text text-2xl font-extrabold tracking-wide text-transparent sm:text-3xl md:text-4xl">
+            <h2 className="bg-linear-to-r from-blue-700 via-sky-500 to-blue-700 bg-clip-text text-2xl font-extrabold tracking-wide text-transparent sm:text-3xl md:text-4xl">
               أحدث المنتجات المضافة
             </h2>
 
@@ -61,6 +63,13 @@ export default function Recent_products() {
               احتياجاتك اليومية.
             </p>
           </div>
+          <div className="flex items-center    gap-2">
+              <Link href={"/products"}>
+                <Button className="cursor-pointer rounded-full bg-blue-600 px-5 py-2 text-xs sm:text-sm font-semibold hover:bg-blue-700 hover:scale-105 active:scale-95 transition">
+                  عرض كل المنتجات
+                </Button>
+              </Link>
+            </div>
         </div>
 
         {/* حالة التحميل – Skeleton */}

@@ -27,8 +27,7 @@ export default function Footer() {
   } = useGetSettings(accessToken);
 
   useEffect(() => {
-      fetchSettings();
-  
+    fetchSettings();
   }, []);
 
   if (loading)
@@ -252,6 +251,17 @@ export default function Footer() {
           <p className="text-sm leading-relaxed">
             أفضل متجر لبيع الموبايلات والإلكترونيات مع ضمان وجودة عالية.
           </p>
+          <a
+            href="https://play.google.com/store/apps/details?id=com.laserjet"
+            target="_blank"
+          >
+            <img
+              src="google-play.png"
+              className="h-20"
+              alt="goolge play icon"
+              aria-label="google play icon"
+            />
+          </a>
         </div>
 
         {/* Quick Links */}
@@ -296,28 +306,43 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link href="/account/wishlist" className="hover:text-blue-600 transition">
+              <Link
+                href="/account/wishlist"
+                className="hover:text-blue-600 transition"
+              >
                 المفضلة
               </Link>
             </li>
             <li>
-              <Link href="/account/wallet" className="hover:text-blue-600 transition">
+              <Link
+                href="/account/wallet"
+                className="hover:text-blue-600 transition"
+              >
                 المحفظة
               </Link>
             </li>
             <li>
-              <Link href="/account/deposit" className="hover:text-blue-600 transition">
+              <Link
+                href="/account/deposit"
+                className="hover:text-blue-600 transition"
+              >
                 الإيداع
               </Link>
             </li>
             <li>
-              <Link href="/account/send-money" className="hover:text-blue-600 transition">
+              <Link
+                href="/account/send-money"
+                className="hover:text-blue-600 transition"
+              >
                 إرسال الأموال
               </Link>
             </li>
-            
+
             <li>
-              <Link href="/account/addresses" className="hover:text-blue-600 transition">
+              <Link
+                href="/account/addresses"
+                className="hover:text-blue-600 transition"
+              >
                 العناوين
               </Link>
             </li>
@@ -375,7 +400,6 @@ export default function Footer() {
             ))}
           </div>
         </div>
-        
       </div>
 
       <div className="text-center py-4 text-sm text-gray-500 border-t border-gray-200">

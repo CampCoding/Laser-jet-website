@@ -85,7 +85,7 @@ export default function SearchOverlay() {
           {/* White Card */}
           <div className="relative w-full max-w-4xl rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
             {/* Top gradient line */}
-            <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-sky-400 to-indigo-500" />
+            <div className="h-1 w-full bg-linear-to-r from-blue-500 via-sky-400 to-indigo-500" />
 
             {/* Header / input */}
             <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5">

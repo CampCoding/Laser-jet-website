@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect , useRef} from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import {
@@ -44,7 +44,9 @@ export default function ProductDetailsPage() {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [mainSwiper, setMainSwiper] = useState(null); // ✅ Swiper الرئيسي
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 }); // ✅ لتحديد نقطة الزوم حسب حركة الماوس
-
+  const prevRef = useRef(null);
+  const nextRef = useRef(null);
+  
   const { id } = useParams();
   const { addToWishList, isLoading: wishLoading } = useAddToWishList({
     onSuccess: (res) => {
@@ -72,7 +74,9 @@ export default function ProductDetailsPage() {
         const wishData = await ShowWishList();
         const wishItems = wishData?.data || [];
         setIsFav(wishItems.some((w) => w.product_id === product_id));
-        toast.success(setIsFav ? "تمت إزالة المنتج من المفضلة" : "تمت إضافة المنتج للمفضلة");
+        toast.success(
+          setIsFav ? "تمت إزالة المنتج من المفضلة" : "تمت إضافة المنتج للمفضلة"
+        );
       } else {
         toast.error(data?.message || "لم يتم إضافة المنتج للمفضلة");
       }
@@ -195,49 +199,84 @@ export default function ProductDetailsPage() {
                   <button
                     type="button"
                     onClick={() => HandleTowishlist(product.product_id)}
-                    className="p-2 cursor-pointer rounded-full border border-slate-200 hover:border-rose-400 hover:bg-rose-50 transition-colors"
+                    className="p-2 cursor-pointer rounded-full bg-white border border-slate-200 hover:border-rose-400 hover:bg-rose-50 transition-colors"
                     aria-label="إضافة للمفضلة"
                   >
                     <Heart
-                      className={`w-5 h-5 ${
+                      className={`w-5 h-5 bg- ${
                         isFavourite ? "fill-rose-500 text-rose-500" : ""
                       }`}
                     />
                   </button>
                 </div>
-                <Swiper
-                  modules={[Navigation, Pagination, Thumbs, FreeMode]}
-                  navigation
-                  pagination={{ clickable: true }}
-                  onSwiper={setMainSwiper} // ✅ نمسك الـ instance
-                  thumbs={
-                    thumbsSwiper && !thumbsSwiper.destroyed
-                      ? { swiper: thumbsSwiper }
-                      : undefined
-                  }
-                  spaceBetween={10}
-                  className="rounded-2xl overflow-hidden mb-4 w-full"
-                >
-                  {images.map((img) => (
-                    <SwiperSlide key={img.product_image_id}>
-                      {/* ✅ Zoom Wrapper */}
-                      <div
-                        className="group relative w-full aspect-square bg-slate-100 flex items-center justify-center overflow-hidden"
-                        onMouseMove={handleZoomMove}
-                        onMouseLeave={handleZoomLeave}
-                      >
-                        <img
-                          src={img.image_url}
-                          alt={product.title}
-                          className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-200"
-                          style={{
-                            transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                          }}
-                        />
-                      </div>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
+                <div className="relative">
+                  <Swiper
+                    modules={[Navigation, Pagination, Thumbs, FreeMode]}
+                    pagination={{ clickable: true }}
+                    onSwiper={setMainSwiper}
+                    onBeforeInit={(swiper) => {
+                      swiper.params.navigation.prevEl = prevRef.current;
+                      swiper.params.navigation.nextEl = nextRef.current;
+                    }}
+                    navigation={{
+                      prevEl: prevRef.current,
+                      nextEl: nextRef.current,
+                    }}
+                    thumbs={
+                      thumbsSwiper && !thumbsSwiper.destroyed
+                        ? { swiper: thumbsSwiper }
+                        : undefined
+                    }
+                    spaceBetween={10}
+                    className="rounded-2xl overflow-hidden mb-4 w-full"
+                  >
+                    {images.map((img) => (
+                      <SwiperSlide key={img.product_image_id}>
+                        <div
+                          className="group relative w-full aspect-square bg-slate-100 flex items-center justify-center overflow-hidden"
+                          onMouseMove={handleZoomMove}
+                          onMouseLeave={handleZoomLeave}
+                        >
+                          <img
+                            src={img.image_url}
+                            alt={product.title}
+                            className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-200"
+                            style={{
+                              transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                            }}
+                          />
+                        </div>
+                      </SwiperSlide>
+                    ))}
+                  </Swiper>
+
+                  {/* ✅ Custom Navigation */}
+                  <button
+                    ref={prevRef}
+                    type="button"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 z-20
+               h-10 w-10 rounded-full bg-white/90 shadow
+               flex items-center justify-center
+               hover:bg-white transition
+               disabled:opacity-40 disabled:cursor-not-allowed"
+                    aria-label="Previous"
+                  >
+                    <ChevronLeft className="h-5 w-5 text-gray-800" />
+                  </button>
+
+                  <button
+                    ref={nextRef}
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-20
+               h-10 w-10 rounded-full bg-white/90 shadow
+               flex items-center justify-center
+               hover:bg-white transition
+               disabled:opacity-40 disabled:cursor-not-allowed"
+                    aria-label="Next"
+                  >
+                    <ChevronRight className="h-5 w-5 text-gray-800" />
+                  </button>
+                </div>
               </div>
 
               {/* Thumbs Swiper */}
@@ -326,7 +365,7 @@ export default function ProductDetailsPage() {
                   </button>
                 </div>
 
-                <CardTitle className="text-2xl lg:text-3xl font-bold text-slate-900">
+                <CardTitle className="text-lg lg:text-xl font-bold text-slate-900">
                   {product.title}
                 </CardTitle>
               </CardHeader>
@@ -483,7 +522,7 @@ export default function ProductDetailsPage() {
 
             {/* 🔐 مزايا الشراء */}
             <Card
-              className="shadow-sm border-slate-100 bg-gradient-to-l from-slate-50 to-white"
+              className="shadow-sm border-slate-100 bg-linear-to-l from-slate-50 to-white"
               data-aos="fade-up"
             >
               <CardContent className="p-4 grid gap-4 sm:grid-cols-2">
@@ -546,7 +585,7 @@ export default function ProductDetailsPage() {
         </div>
       </div>
 
-      <RecommendedProductsSwiper categoryId={product.category_id} />
+      <RecommendedProductsSwiper product={product} categoryId={product.category_id} />
     </div>
   );
 }

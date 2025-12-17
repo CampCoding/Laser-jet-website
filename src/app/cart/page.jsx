@@ -101,7 +101,7 @@ export default function CartPage() {
 
   if (shouldShowFirstLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100">
+      <div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-slate-100">
         {/* Header Skeleton */}
         <div className="bg-white/80 backdrop-blur border-b border-slate-100 shadow-sm sticky top-0 z-30">
           <div className="container mx-auto px-4 py-5 md:py-6 flex items-center justify-between">
@@ -173,7 +173,7 @@ export default function CartPage() {
   // لو مش عامل لوجين
   if (sessionStatus !== "loading" && sessionStatus === "unauthenticated") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-slate-50 to-slate-100">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-linear-to-b from-slate-50 to-slate-100">
         <div className="max-w-md w-full bg-white shadow-xl rounded-2xl p-8 border border-slate-100">
           <div className="w-16 h-16 rounded-2xl bg-blue-600/10 flex items-center justify-center mx-auto mb-5">
             <User className="w-8 h-8 text-blue-600" />
@@ -206,7 +206,7 @@ export default function CartPage() {
   // لو حصل خطأ في جلب السلة
   if (cartStatus === "failed") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-slate-50 to-slate-100">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-linear-to-b from-slate-50 to-slate-100">
         <div className="max-w-md w-full bg-white shadow-xl rounded-2xl p-8 border border-slate-100">
           <h1 className="text-2xl font-bold mb-3 text-red-600">
             حدث خطأ في جلب سلة التسوق

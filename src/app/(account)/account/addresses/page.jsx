@@ -249,7 +249,7 @@ export default function AddressListApp() {
                     className="relative bg-white/90 backdrop-blur rounded-2xl shadow-sm border border-gray-100 overflow-hidden group"
                   >
                     {/* Subtle top gradient bar */}
-                    <div className="h-1 w-full bg-gradient-to-l from-blue-500 via-sky-400 to-cyan-400" />
+                    <div className="h-1 w-full bg-linear-to-l from-blue-500 via-sky-400 to-cyan-400" />
 
                     <div className="p-5 space-y-3">
                       {/* Header row */}

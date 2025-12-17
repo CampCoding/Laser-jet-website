@@ -133,11 +133,11 @@ export default function Page() {
             />
           ))}
           
-          <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 pulse-animate shadow-lg">
+          <div className="w-20 h-20 bg-linear-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 pulse-animate shadow-lg">
             <CheckCircle className="w-12 h-12 text-white checkmark-animate" />
           </div>
           
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent mb-3">
+          <h2 className="text-3xl font-bold bg-linear-to-r from-green-600 to-green-500 bg-clip-text text-transparent mb-3">
             تم إرسال الشكوى بنجاح!
           </h2>
           
@@ -161,7 +161,7 @@ export default function Page() {
                   priority: 'medium'
                 });
               }}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition transform hover:scale-105"
+              className="flex-1 bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition transform hover:scale-105"
             >
               إرسال شكوى جديدة
             </button>
@@ -178,7 +178,7 @@ export default function Page() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
 
           {/* HEADER */}
-          <div className=" bg-gradient-to-r from-blue-600 via-sky-500 to-blue-700 px-8 py-5">
+          <div className=" bg-linear-to-r from-blue-600 via-sky-500 to-blue-700 px-8 py-5">
             <div className="flex items-center gap-3">
               <AlertCircle className="w-8 h-8 text-white" />
               <div>
@@ -295,7 +295,7 @@ export default function Page() {
               {/* BUTTON */}
               <button
                 type="submit"
-                className="w-full cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg"
+                className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold py-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg"
               >
                 <Send className="w-5 h-5" />
                 إرسال الشكوى

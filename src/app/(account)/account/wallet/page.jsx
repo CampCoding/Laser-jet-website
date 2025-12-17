@@ -134,7 +134,7 @@ export default function WalletCard() {
               {/* Right: balance + fines */}
               <div className="space-y-3 sm:space-y-4 md:space-y-5">
                 {/* Balance */}
-                <div className="rounded-2xl bg-gradient-to-l from-blue-600 via-indigo-600 to-cyan-500 p-3 sm:p-4 md:p-5 text-white shadow-md">
+                <div className="rounded-2xl bg-linear-to-l from-blue-600 via-indigo-600 to-cyan-500 p-3 sm:p-4 md:p-5 text-white shadow-md">
                   <div className="mb-2 flex items-center justify-between sm:mb-3">
                     <span className="text-[11px] text-blue-100 sm:text-xs md:text-sm">
                       الرصيد الحالي

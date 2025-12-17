@@ -112,7 +112,7 @@ export default function OtpVerificationPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gradient-to-t md:bg-gradient-to-r from-blue-600 to-gray-50 px-4 md:px-16 gap-8">
+    <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-linear-to-t md:bg-linear-to-r from-blue-600 to-gray-50 px-4 md:px-16 gap-8">
       <div className="hidden md:flex relative w-1/3 h-[250px] items-center justify-center">
         <Image src="/logo.png" alt="Logo" fill className="object-contain" />
       </div>

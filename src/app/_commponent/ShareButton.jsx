@@ -36,14 +36,14 @@ export default function ShareDropdown({ url, title , buttonTitle }) {
   return (
     <div
       ref={dropdownRef}
-      className="relative w-full md:w-auto share-dropdown inline-block text-left"
+      className="relative w-full md:w-auto share-dropdown inline-block text-left "
     >
       {/* Trigger button */}
       {  <motion.button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         whileTap={{ scale: 0.95 }}
-        className={`cursor-pointer w-full md:w-auto inline-flex items-center gap-2 rounded-full border border-slate-200 ${buttonTitle ? "px-4" : "px-2"} py-2 text-sm font-medium text-blue-700 hover:border-blue-400 hover:bg-rose-50 transition-colors`}
+        className={`cursor-pointer w-full md:w-auto inline-flex items-center gap-2 bg-white rounded-full border border-slate-200 ${buttonTitle ? "px-4" : "px-2"} py-2 text-sm font-medium text-blue-700 hover:border-blue-400 hover:bg-rose-50 transition-colors`}
       >
         <motion.span
           animate={{ rotate: open ? 90 : 0 }}

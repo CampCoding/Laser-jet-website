@@ -124,7 +124,7 @@ export default function LoginPage() {
   // 🎨 Responsive UI (JSX)
   // =====================
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-600/10 via-blue-50 to-white px-4 py-10">
+    <div className="min-h-screen bg-linear-to-b from-blue-600/10 via-blue-50 to-white px-4 py-10">
       <div className="mx-auto flex min-h-[70vh] max-w-5xl flex-col items-center justify-center gap-10 md:grid md:grid-cols-2">
         {/* اللوغو الجانبي - يظهر فقط من md وطالع */}
         <div
