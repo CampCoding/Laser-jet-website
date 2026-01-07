@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+    --main-blue : #0d6efd;
+}
+
+body {
+    direction: rtl;
+}
+
+%inputs-style {
+    width: 100%;
+    border:  1px solid #dee2e6;
+    outline: none;
+    padding: 10px 7px;
+    border-radius: 7px;
+}
+
+%inputs-style-focus {
+    box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .25);
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    label {
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    input , select,textarea {
+        @extend %inputs-style;
+        &:focus {
+            @extend %inputs-style-focus
+        }
+    }
+}
+
+
