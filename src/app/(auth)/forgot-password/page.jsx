@@ -105,7 +105,7 @@ export default function ForgotPasswordPage() {
               className="hidden h-full md:flex flex-col items-center justify-center"
             >
               <img
-                src="/logo.png"
+                src="/logo2.png"
                 className="w-40 sm:w-52 md:w-64 lg:w-72 max-w-full h-auto"
                 alt="Logo"
               />

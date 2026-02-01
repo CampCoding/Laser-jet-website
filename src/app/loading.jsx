@@ -7,7 +7,7 @@ export default function Loading() {
     <div className="min-h-screen flex flex-col items-center justify-center ">
       {/* العنوان */}
       <div className="flex flex-col justify-center items-center mb-10">
-        <img src="/logo.png" alt="" />
+        <img src="/logo2.png" alt="" className="h-28 mb-5!" />
       </div>
 
       {/* اللودر */}

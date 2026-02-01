@@ -338,7 +338,7 @@ export default function Navbar() {
                 <div className="flex items-center gap-2">
                   <div className="relative h-8 w-20">
                     <Image
-                      src="/logo.png"
+                      src="/logo2.png"
                       alt="Logo"
                       fill
                       className="object-contain"
