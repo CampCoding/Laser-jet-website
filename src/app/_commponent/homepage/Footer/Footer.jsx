@@ -246,7 +246,7 @@ export default function Footer() {
         {/* Logo + Description */}
         <div>
           <Link href="/" className="mb-10!">
-            <img src="/logo.png" alt="" className="h-14 mb-5!" />
+            <img src="/logo2.png" alt="" className="h-28 mb-5!" />
           </Link>
           <p className="text-sm leading-relaxed">
             أفضل متجر لبيع الموبايلات والإلكترونيات مع ضمان وجودة عالية.
